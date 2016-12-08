@@ -1,0 +1,7 @@
+*.pyc
+.settings
+.project
+.pydevproject
+docs/_build/
+pybin
+coverage_html

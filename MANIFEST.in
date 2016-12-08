@@ -1,0 +1,2 @@
+recursive-include comments/static *
+recursive-include comments/templates *
