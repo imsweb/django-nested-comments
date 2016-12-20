@@ -2,11 +2,16 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
 from django.utils import timezone
+from mptt.models import MPTTModel, TreeForeignKey
 
 from .utils import JSONField
 
-class Comment (models.Model):
-    parent_comment = models.ForeignKey('self', related_name="child_comments", null=True, blank=True)
+class Comment (MPTTModel):
+    """
+    This is the 'node' model of a comment tree.
+    NOTE: The root object (the one with a content_object and no parent) is NOT a real comment, but allows for associating to any object.
+    """
+    parent = TreeForeignKey('self', null=True, blank=True, db_index=True)
     date_created = models.DateTimeField(default=timezone.now, editable=False)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='comments', null=True, blank=True)
     
@@ -14,11 +19,11 @@ class Comment (models.Model):
     object_id = models.PositiveIntegerField(blank=True, null=True)
     content_object = GenericForeignKey()
     
-    # Use this to 'lock' the comment so two users do not edit the same comment at the same time
-    transaction_lock = models.BooleanField(default=False)
-    
     # User-defined data, stored as JSON in a text field.
     data = JSONField(null=True)
+    
+    class MPTTMeta:
+        order_insertion_by  = 'date_created'
     
 class CommentVersion (models.Model):
     comment = models.ForeignKey(Comment, related_name='versions')

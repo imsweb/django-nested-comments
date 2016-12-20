@@ -1,0 +1,18 @@
+{% load mptt_tags %}
+
+<div>
+    {% recursetree nodes %}
+        {% if not node.is_root_node %}
+	        <div>
+	            {% if node.created_by %}Posted by: {{ node.created_by }} {% endif %}Date Posted: {{ node.date_created }}
+	            <br>
+	            {{ node.versions.latest.message }}
+	        </div>
+        {% endif %}
+        {% if not node.is_leaf_node %}
+            {{ children }}
+        {% endif %}
+    {% endrecursetree %}
+</div>
+
+{% comments parent_object parameters inital_load_number
