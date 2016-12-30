@@ -1,0 +1,31 @@
+.left-comment-indent { 
+	margin-left: 30px;
+	padding-left: 10px; 
+	border-left: 1px solid black;
+}
+
+.comment-header-container {
+	border-bottom: 1px solid black;
+	padding-bottom: 5px;
+}
+
+.comment-header-right {
+	float: right;
+}
+.comments-tree-container, .comment-body {
+	padding: 5px;
+}
+
+.action-trigger {
+     background:none!important;
+     border:none; 
+     padding:0!important;
+     font: inherit;
+     /*border is optional*/
+     border-bottom:1px solid #444; 
+     cursor: pointer;
+}
+
+.comment-form.non-root {
+	display: none;
+}

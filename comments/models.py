@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
@@ -14,6 +15,7 @@ class Comment (MPTTModel):
     parent = TreeForeignKey('self', null=True, blank=True, db_index=True)
     date_created = models.DateTimeField(default=timezone.now, editable=False)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='comments', null=True, blank=True)
+    max_depth = models.IntegerField(default=2)
     
     content_type = models.ForeignKey(ContentType, blank=True, null=True)
     object_id = models.PositiveIntegerField(blank=True, null=True)

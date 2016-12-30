@@ -1,5 +1,7 @@
+from django.contrib.contenttypes.models import ContentType
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
+
 import json
 
 class JSONField (models.TextField):
@@ -37,6 +39,7 @@ def _get_target_comment(request):
         This function returns the following tuple:
             (comment, version the user is editing (or None if new comment))
     """
+    from .models import Comment
     # Check if the user is attempting to edit an existing comment...
     if 'version_id' in request.POST:
         try:
@@ -47,22 +50,30 @@ def _get_target_comment(request):
     # Or they are trying to create a new comment...
     elif 'parent_id' in request.POST:
         try:
-            parent_comment = Comment.object.get(id=request.POST.get('parent_id'))
-            return Comment(parent_comment=parent_comment, created_by=request.user), None
-        except Comment.DoesNotExist:
+            parent = Comment.objects.get(id=request.POST.get('parent_id'))
+            return Comment(parent=parent, created_by=request.user), None
+        except Comment.DoesNotExist, e:
             raise InvalidCommentException("The comment you are responding to could not be found.")
     # Or we can't tell what they were trying to do, so we return a 404
     else:
         raise InvalidCommentException("An error occurred while saving your comment.")
     
 def _get_or_create_tree_root(request):
+    from .models import Comment
     if 'ct_id' in request.GET and 'obj_id' in request.GET:
         try:
             parent_comment = None
             ct = ContentType.objects.get_for_id(request.GET.get('ct_id'))
-            obj = ct.get_object_for_this_type(pk=request.GET.get('obj_id'))
-            return Comment.objects.get_or_create(content_object=obj)
-        except:
+            obj_id = request.GET.get('obj_id')
+            obj = ct.get_object_for_this_type(pk=obj_id)
+            try:
+                return Comment.objects.get(object_id=obj_id, content_type=ct)
+            except Comment.DoesNotExist:
+                kwargs = {}
+                if hasattr(obj, 'max_comment_depth'):
+                    kwargs['max_depth'] = getattr(obj, 'max_comment_depth')()
+                return Comment.objects.create(content_object=obj, **kwargs)
+        except Exception, e:
             raise InvalidCommentException("Unable to access comment tree: parent object not found.")
     else:
         raise InvalidCommentException("Unable to access comment tree: invalid request parameters.")

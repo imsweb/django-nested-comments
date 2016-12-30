@@ -1,0 +1,10 @@
+Functions that can be defined on parent object (func_name : default):
+view_comments : user.is_authenticated()
+post_comment : user.is_authenticated()
+max_comment_depth : 2
+
+Template tags:
+{% render_comments parent_object initial_load_number %}
+
+Javascript:
+$('document.body').comments({% initialize_comments %});

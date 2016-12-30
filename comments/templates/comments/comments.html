@@ -3,16 +3,46 @@
 <div>
     {% recursetree nodes %}
         {% if not node.is_root_node %}
-	        <div>
-	            {% if node.created_by %}Posted by: {{ node.created_by }} {% endif %}Date Posted: {{ node.date_created }}
-	            <br>
-	            {{ node.versions.latest.message }}
-	        </div>
+            {% with node.versions.latest as latest_version %}
+	            <div class="comments-app-container">
+				    <div class="comments-hidden-fields">
+			            <input type="hidden" name="version_id" value="{{ node.versions.latest.id }}">
+				    </div>
+				    <div class="comments-tree-container">
+				        <div class="comment-header-container">
+				            {# header right goes first so we can 'float:right' and keep it inline #}
+				            <div class="comment-header-right">
+				                {% if node.level < node.get_root.max_depth %}<span class="action-trigger" data-action="reply">reply</span> - {% endif %}
+				                <span class="action-trigger" data-action="edit">edit</span> - 
+				                <span class="action-trigger" data-action="edit">delete</span>
+				            </div>
+				            <div class="comment-header-left">
+				                {{ node.created_by.first_name }} {{ node.created_by.last_name }} &lt;{{ node.created_by.email }}&gt;
+				            </div>
+				        </div>
+				        <div class="comment-body">
+				            {{ latest_version.message }}
+				        </div>
+				    </div>
+				</div>
+			{% endwith %}
         {% endif %}
+        {# After the last child on each level we add the form to allow new comments #}
         {% if not node.is_leaf_node %}
-            {{ children }}
+            <div {% if not node.is_root_node %}class="left-comment-indent"{% endif %}>
+                {{ children }}
+            </div>
         {% endif %}
+           {% if node.level < node.get_root.max_depth %}
+            <div class="comments-app-container comment-form {% if not node.is_root_node %} left-comment-indent non-root{% endif %}">
+			    <div class="comments-hidden-fields">
+		            <input type="hidden" name="parent_id" value="{{ node.id }}">
+			    </div>
+			    <div class="comments-tree-container">
+			        <input type="text" name="message">
+			        <button type="button" class="post-comment">Submit Comment</button>
+			    </div>
+			</div>
+		{% endif %}
     {% endrecursetree %}
 </div>
-
-{% comments parent_object parameters inital_load_number
