@@ -12,11 +12,11 @@
 .comment-header-right {
 	float: right;
 }
-.comments-tree-container, .comment-body {
+.comments-tree-container, .comment-content {
 	padding: 5px;
 }
 
-.action-trigger {
+.fake-link {
      background:none!important;
      border:none; 
      padding:0!important;
@@ -26,6 +26,10 @@
      cursor: pointer;
 }
 
-.comment-form.non-root {
+.comment-form.non-root, .message-edit-container {
 	display: none;
+}
+
+.message-edit-container {
+	padding-top: 10px;
 }

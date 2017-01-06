@@ -39,11 +39,11 @@ def _get_target_comment(request):
         This function returns the following tuple:
             (comment, version the user is editing (or None if new comment))
     """
-    from .models import Comment
+    from .models import Comment, CommentVersion
     # Check if the user is attempting to edit an existing comment...
     if 'version_id' in request.POST:
         try:
-            previous_version = CommentVersion.objects.get(id=request.POST.get('version_id')).select_related('comment')
+            previous_version = CommentVersion.objects.select_related('comment').get(id=request.POST.get('version_id'))
             return previous_version.comment, previous_version
         except CommentVersion.DoesNotExist:
             raise InvalidCommentException("The comment you are attempting to update could not be found.")
@@ -67,24 +67,29 @@ def _get_or_create_tree_root(request):
             obj_id = request.GET.get('obj_id')
             obj = ct.get_object_for_this_type(pk=obj_id)
             try:
-                return Comment.objects.get(object_id=obj_id, content_type=ct)
+                return Comment.objects.get(object_id=obj_id, content_type=ct), obj
             except Comment.DoesNotExist:
                 kwargs = {}
                 if hasattr(obj, 'max_comment_depth'):
                     kwargs['max_depth'] = getattr(obj, 'max_comment_depth')()
-                return Comment.objects.create(content_object=obj, **kwargs)
+                return Comment.objects.create(content_object=obj, **kwargs), obj
         except Exception, e:
             raise InvalidCommentException("Unable to access comment tree: parent object not found.")
     else:
         raise InvalidCommentException("Unable to access comment tree: invalid request parameters.")
         
-def user_has_permission(request, parent_object, permission_function, **kwargs):
+def user_has_permission(request, parent_object, permission_function, default_function=None, **kwargs):
     """
         Allows the associated object to define its own permission functions.
         If permission_function is not defined we fall back to 'is_authenticated()'.
         NOTE: kwargs can pass any necessary objects to the permission function and will vary based on what permission we are checking.
     """
-    auth = request.user.is_authenticated()
+    if default_function:
+        default_kwargs = {'request': request, 'parent_object': parent_object, 'permission_function': permission_function}
+        default_kwargs.update(kwargs)
+        auth = default_function(**default_kwargs)
+    else:
+        auth = request.user.is_authenticated()
     if hasattr(parent_object, permission_function):
         auth = getattr(parent_object, permission_function)(request, **kwargs)
     return auth

@@ -1,48 +1,59 @@
 {% load mptt_tags %}
+{% load comments %}
 
 <div>
     {% recursetree nodes %}
-        {% if not node.is_root_node %}
-            {% with node.versions.latest as latest_version %}
-	            <div class="comments-app-container">
+        {% get_latest_version as latest_version %}
+            <div class="comments-app-container">
+		        {% if not node.is_root_node %}
 				    <div class="comments-hidden-fields">
-			            <input type="hidden" name="version_id" value="{{ node.versions.latest.id }}">
+			            <input type="hidden" name="version_id" value="{{ latest_version.id }}">
+			            <input type="hidden" name="message">
 				    </div>
 				    <div class="comments-tree-container">
 				        <div class="comment-header-container">
 				            {# header right goes first so we can 'float:right' and keep it inline #}
 				            <div class="comment-header-right">
-				                {% if node.level < node.get_root.max_depth %}<span class="action-trigger" data-action="reply">reply</span> - {% endif %}
-				                <span class="action-trigger" data-action="edit">edit</span> - 
-				                <span class="action-trigger" data-action="edit">delete</span>
+				                {# Rendered in simple tags to allow access to context (prevents extra queries) #}
+				                {% render_reply %}
+				                {% render_edit %}
+				                {% render_delete %}
 				            </div>
 				            <div class="comment-header-left">
 				                {{ node.created_by.first_name }} {{ node.created_by.last_name }} &lt;{{ node.created_by.email }}&gt;
+				                {% if node.versions.count > 1 %}
+				                    <br>
+				                    <span class="last_edited">Last edited by: {{ latest_version.posting_user.first_name }} {{ latest_version.posting_user.last_name }} &lt;{{ latest_version.posting_user.email }}&gt;</span>
+				                {% endif %}
 				            </div>
 				        </div>
 				        <div class="comment-body">
-				            {{ latest_version.message }}
+				            <span class="original-message">{{ latest_version.message }}</span>
+				            <div class="message-edit-container">
+    				            <input type="text" name="message_holder" value="{{ latest_version.message }}">
+                                <button type="button" class="action-trigger" data-action="post">Submit Comment</button>
+				            </div>
 				        </div>
 				    </div>
-				</div>
-			{% endwith %}
-        {% endif %}
-        {# After the last child on each level we add the form to allow new comments #}
-        {% if not node.is_leaf_node %}
-            <div {% if not node.is_root_node %}class="left-comment-indent"{% endif %}>
-                {{ children }}
-            </div>
-        {% endif %}
-           {% if node.level < node.get_root.max_depth %}
-            <div class="comments-app-container comment-form {% if not node.is_root_node %} left-comment-indent non-root{% endif %}">
-			    <div class="comments-hidden-fields">
-		            <input type="hidden" name="parent_id" value="{{ node.id }}">
-			    </div>
-			    <div class="comments-tree-container">
-			        <input type="text" name="message">
-			        <button type="button" class="post-comment">Submit Comment</button>
-			    </div>
+		        {% endif %}
+		        {% if not node.is_leaf_node %}
+		            <div {% if not node.is_root_node %}class="left-comment-indent"{% endif %}>
+		                {{ children }}
+		            </div>
+		        {% endif %}
+		        {# After the last child on each level we add the form to allow new comments at that level #}
+		        {% if node.level < max_depth %}
+		            <div class="comments-app-container comment-form {% if not node.is_root_node %} left-comment-indent non-root{% endif %}">
+					    <div class="comments-hidden-fields">
+				            <input type="hidden" name="parent_id" value="{{ node.id }}">
+				            <input type="hidden" name="message">
+					    </div>
+					    <div class="comments-tree-container">
+					        <input type="text" name="message_holder">
+					        <button type="button" class="action-trigger" data-action="post">Submit Comment</button>
+					    </div>
+					</div>
+				{% endif %}
 			</div>
-		{% endif %}
     {% endrecursetree %}
 </div>

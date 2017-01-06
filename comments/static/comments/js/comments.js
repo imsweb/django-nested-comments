@@ -20,16 +20,17 @@
         var settings = $.extend({
         	appContainerSelector: ".comments-app-container",
         	treeContainerSelector: ".comments-tree-container",
+        	hiddenFieldsContainerSelector: ".comments-hidden-fields",
         	actionTriggerSelector: ".action-trigger",
         	commentFormSelector: ".comment-form",
+        	messageEditContainerSelector: ".message-edit-container",
+        	originalMessageSelector: ".original-message",
         	
         	getUrl: null,
+        	postUrl: null,
+        	deleteUrl: null,
         	
-			postUrl: null,
-			postCommentSelector: ".post-comment",
 			
-			deleteUrl: null,
-			deleteCommentSelector: ".delete-comment"
         }, options);
 
         var refresh_comments = function() {
@@ -54,7 +55,7 @@
             $.ajax({
             	type: 'POST',
     			url: url,
-    			data: $(appContainer).find(':input').serialize(),
+    			data: $(appContainer).children(settings.hiddenFieldsContainerSelector).find(':input').serialize(),
     			beforeSend: function(xhr, settings) {
     		        if (!this.crossDomain) {
     		            xhr.setRequestHeader("X-CSRFToken", csrftoken);
@@ -72,33 +73,41 @@
         
         refresh_comments();
         
-        // TODO: decide how to handle combined/separate design
-        $('body').on('click', settings.postCommentSelector, function() {
-        	var appContainer = $(this).closest(settings.appContainerSelector);
-        	var callback = $.Deferred();
-        	callback.always(function(response){
-        		$(appContainer).find(settings.treeContainerSelector).empty().append(response.html_content);
-        	});
-        	post_data(settings.postUrl, appContainer, callback);
-        	return false;
-        });
-        
-        $('body').on('click', settings.deleteCommentSelector, function() {
-        	var appContainer = $(this).closest(settings.appContainerSelector);
-        	var callback = $.Deferred();
-        	callback.always(function(response){
-        		$(appContainer).find(settings.treeContainerSelector).empty().append(response.html_content);
-        	});
-        	post_data(settings.postUrl, appContainer, callback);
-        	return false;
-        });
-        
+        // Group all "click handlers" here
         $('body').on('click', settings.actionTriggerSelector, function() {
+        	var appContainer = $(this).closest(settings.appContainerSelector);
         	switch($(this).data('action')) {
+        		case 'post':
+        			// Copy the message content over to the hidden field
+        			$(appContainer).find('input[name=message]').val($(appContainer).find('input[name=message_holder]').val())
+        			var callback = $.Deferred();
+                	callback.always(function(response){
+                		// Refresh from parent comment down
+                		$(appContainer).parent().closest(settings.appContainerSelector).empty().append(response.html_content);
+                	});
+                	post_data(settings.postUrl, appContainer, callback);
+                	break;
         		case 'reply':
-        			$(this).closest(settings.appContainerSelector).nextAll(settings.commentFormSelector).first().toggle();
+        			$(appContainer).children(settings.commentFormSelector).first().toggle();
+        			break;
+        		case 'edit':
+        			$(appContainer).find(settings.messageEditContainerSelector).first().toggle();
+        			$(appContainer).find(settings.originalMessageSelector).first().toggle();
+        			break;
+        		case 'delete':
+        			if(confirm('Deleting this comment will remove all responses as well. Continue?')){
+        				var callback = $.Deferred();
+        				callback.done(function(response){
+        					$(appContainer).remove();
+        				}).fail(function(response){
+        					// TODO: Better error handling (customizable?)
+        					alert("Comments could not be deleted");
+        				});
+        				post_data(settings.deleteUrl, appContainer, callback);
+        			}
         			break;
         	}
+        	return false;
         });
     };
 }(jQuery));
