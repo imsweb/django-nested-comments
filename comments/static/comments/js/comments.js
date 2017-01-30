@@ -1,5 +1,6 @@
 (function($) {
     $.fn.comments = function(options) {
+    	// Copied from Django docs, used to pass in CSRF token
     	function getCookie(name) {
     	    var cookieValue = null;
     	    if (document.cookie && document.cookie !== '') {
@@ -18,32 +19,31 @@
     	var csrftoken = getCookie('csrftoken');
     	
         var settings = $.extend({
-        	appContainerSelector: ".comments-app-container",
-        	treeContainerSelector: ".comments-tree-container",
-        	hiddenFieldsContainerSelector: ".comments-hidden-fields",
         	actionTriggerSelector: ".action-trigger",
+        	childCommentsSelector: ".child-comments",
+        	commentContainerSelector: ".comment-container",
         	commentFormSelector: ".comment-form",
+        	hiddenFieldsSelector: ".comment-hidden-fields",
         	messageEditContainerSelector: ".message-edit-container",
+        	nodeContainerSelector: ".comments-node-container",
         	originalMessageSelector: ".original-message",
+        	rootContainerSelector: ".comments-root-container",
         	
         	getUrl: null,
         	postUrl: null,
         	deleteUrl: null,
-        	
-			
         }, options);
 
-        var refresh_comments = function() {
-        	$(settings.appContainerSelector).each(function(){
-        		var appContainer = this;
-        		var hiddenFields = $(appContainer).find(':input')
+        var load_comments = function() {
+        	$(settings.nodeContainerSelector).each(function(){
+        		var nodeContainer = this;
         		// TODO: Check for load_initial and skip if 0 (save us a hit on the server)
         		$.ajax({
         			url: settings.getUrl,
-        			data: hiddenFields.serialize(),
+        			data: $(nodeContainer).children(settings.hiddenFieldsSelector).find(':input').serialize(),
         			success: function(response) {
         				if (response.ok){
-        					$(appContainer).find(settings.treeContainerSelector).empty().append(response.html_content);
+        					$(nodeContainer).find(settings.rootContainerSelector).empty().append(response.html_content);
         				}
         				// TODO: handle failure
         			}
@@ -51,11 +51,11 @@
         	})
         };
 
-        var post_data = function(url, appContainer, callback) {
+        var post_data = function(url, dataContainer, callback) {
             $.ajax({
             	type: 'POST',
     			url: url,
-    			data: $(appContainer).children(settings.hiddenFieldsContainerSelector).find(':input').serialize(),
+    			data: $(dataContainer).find(':input').serialize(),
     			beforeSend: function(xhr, settings) {
     		        if (!this.crossDomain) {
     		            xhr.setRequestHeader("X-CSRFToken", csrftoken);
@@ -71,43 +71,70 @@
     		});
         };
         
-        refresh_comments();
-        
         // Group all "click handlers" here
         $('body').on('click', settings.actionTriggerSelector, function() {
-        	var appContainer = $(this).closest(settings.appContainerSelector);
+        	var nodeContainer = $(this).closest(settings.nodeContainerSelector);
+        	var commentContainer = nodeContainer.children(settings.commentContainerSelector).first();
         	switch($(this).data('action')) {
-        		case 'post':
+        		case 'post-new':
+        			var commentForm = $(this).closest(settings.commentFormSelector);
+        			
         			// Copy the message content over to the hidden field
-        			$(appContainer).find('input[name=message]').val($(appContainer).find('input[name=message_holder]').val())
+        			var message_holder = commentForm.find('input[name=message_holder]')
+        			commentForm.find('input[name=message]').val(message_holder.val());
+        			message_holder.val('');
+        			
         			var callback = $.Deferred();
-                	callback.always(function(response){
-                		// Refresh from parent comment down
-                		$(appContainer).parent().closest(settings.appContainerSelector).empty().append(response.html_content);
+        			// TODO: Better error handling (customizable?)
+        			// Insert new comment directly before the comment form
+                	callback.done(function(response){
+                		$(commentForm).before(response.html_content);
                 	});
-                	post_data(settings.postUrl, appContainer, callback);
+                	var dataContainer = commentForm.children(settings.hiddenFieldsSelector);
+                	post_data(settings.postUrl, dataContainer, callback);
                 	break;
+        		case 'post-edit':
+        			var commentForm = $(this).closest(settings.commentFormSelector);
+        			
+        			// Copy the message content over to the hidden field
+        			var message_holder = commentForm.find('input[name=message_holder]')
+        			commentForm.find('input[name=message]').val(message_holder.val());
+        			message_holder.val('');
+        			
+    				var callback = $.Deferred();
+    				// TODO: Better error handling (customizable?)
+    				callback.done(function(response){
+    					// Replace the comment being edited with the new version
+            			commentContainer.empty().append(response.html_content);
+    				});
+    				var dataContainer = commentForm.children(settings.hiddenFieldsSelector);
+    				post_data(settings.postUrl, dataContainer, callback);
+        			break;
         		case 'reply':
-        			$(appContainer).children(settings.commentFormSelector).first().toggle();
+        			nodeContainer.children(settings.childCommentsSelector).children(settings.commentFormSelector).toggle();
         			break;
         		case 'edit':
-        			$(appContainer).find(settings.messageEditContainerSelector).first().toggle();
-        			$(appContainer).find(settings.originalMessageSelector).first().toggle();
+        			commentContainer.find(settings.originalMessageSelector).first().toggle();
+        			commentContainer.find(settings.messageEditContainerSelector).first().toggle();
         			break;
         		case 'delete':
         			if(confirm('Deleting this comment will remove all responses as well. Continue?')){
         				var callback = $.Deferred();
         				callback.done(function(response){
-        					$(appContainer).remove();
+        					$(nodeContainer).remove();
         				}).fail(function(response){
         					// TODO: Better error handling (customizable?)
         					alert("Comments could not be deleted");
         				});
-        				post_data(settings.deleteUrl, appContainer, callback);
+        				var dataContainer = commentContainer.find(settings.hiddenFieldsSelector);
+        				post_data(settings.deleteUrl, dataContainer, callback);
         			}
         			break;
         	}
         	return false;
         });
+        
+        load_comments();
+        
     };
 }(jQuery));

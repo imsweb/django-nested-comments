@@ -4,7 +4,7 @@ post_comment : user.is_authenticated()
 max_comment_depth : 2
 
 Template tags:
-{% render_comments parent_object initial_load_number %}
+{% render_comments parent_object %}
 
 Javascript:
 $('document.body').comments({% initialize_comments %});

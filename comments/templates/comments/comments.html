@@ -1,59 +1,60 @@
 {% load mptt_tags %}
 {% load comments %}
 
-<div>
-    {% recursetree nodes %}
-        {% get_latest_version as latest_version %}
-            <div class="comments-app-container">
-		        {% if not node.is_root_node %}
-				    <div class="comments-hidden-fields">
-			            <input type="hidden" name="version_id" value="{{ latest_version.id }}">
-			            <input type="hidden" name="message">
-				    </div>
-				    <div class="comments-tree-container">
-				        <div class="comment-header-container">
-				            {# header right goes first so we can 'float:right' and keep it inline #}
-				            <div class="comment-header-right">
-				                {# Rendered in simple tags to allow access to context (prevents extra queries) #}
-				                {% render_reply %}
-				                {% render_edit %}
-				                {% render_delete %}
-				            </div>
-				            <div class="comment-header-left">
-				                {{ node.created_by.first_name }} {{ node.created_by.last_name }} &lt;{{ node.created_by.email }}&gt;
-				                {% if node.versions.count > 1 %}
-				                    <br>
-				                    <span class="last_edited">Last edited by: {{ latest_version.posting_user.first_name }} {{ latest_version.posting_user.last_name }} &lt;{{ latest_version.posting_user.email }}&gt;</span>
-				                {% endif %}
-				            </div>
-				        </div>
-				        <div class="comment-body">
-				            <span class="original-message">{{ latest_version.message }}</span>
-				            <div class="message-edit-container">
-    				            <input type="text" name="message_holder" value="{{ latest_version.message }}">
-                                <button type="button" class="action-trigger" data-action="post">Submit Comment</button>
-				            </div>
-				        </div>
-				    </div>
-		        {% endif %}
-		        {% if not node.is_leaf_node %}
-		            <div {% if not node.is_root_node %}class="left-comment-indent"{% endif %}>
-		                {{ children }}
-		            </div>
-		        {% endif %}
-		        {# After the last child on each level we add the form to allow new comments at that level #}
-		        {% if node.level < max_depth %}
-		            <div class="comments-app-container comment-form {% if not node.is_root_node %} left-comment-indent non-root{% endif %}">
-					    <div class="comments-hidden-fields">
+{% recursetree nodes %}
+    {% get_latest_version as latest_version %}
+        <div class="comments-node-container" data-level="{{ node.level }}">
+            {# We skip the root node because it is used as a link to the parent_object (not an actual comment) #}
+	        {% if not node.is_root_node %}
+			    <div class="comment-container">
+			        <div class="comment-header">
+			            <div class="comment-header-left">
+			                {{ node.created_by.first_name }} {{ node.created_by.last_name }} &lt;{{ node.created_by.email }}&gt;
+			                {% if node.versions.count > 1 %}
+			                    <br>
+			                    <span class="last_edited">Last edited by: {{ latest_version.posting_user.first_name }} {{ latest_version.posting_user.last_name }} &lt;{{ latest_version.posting_user.email }}&gt;</span>
+			                {% endif %}
+			            </div>
+			            <div class="comment-header-right">
+			                {# Rendered in simple tags to allow access to context (prevents extra queries) #}
+			                {% render_reply %}
+			                {% render_edit %}
+			                {% render_delete %}
+			            </div>
+			        </div>
+			        <div class="comment-body">
+			            <span class="original-message">{{ latest_version.message }}</span>
+			            <div class="message-edit-container">
+                            <div class="comment-form edit-comment{% if not node.is_root_node %} non-root{% endif %}">
+		                        <div class="comment-hidden-fields">
+		                            <input type="hidden" name="version_id" value="{{ latest_version.id }}">
+                                    <input type="hidden" name="message">
+		                        </div>
+		                        <div class="comment-visible-fields">
+		   				            <input type="text" name="message_holder" value="{{ latest_version.message }}">
+		                            <button type="button" class="action-trigger" data-action="post-edit">Submit Comment</button>
+		                        </div>
+		                    </div>
+			            </div>
+			        </div>
+			    </div>
+	        {% endif %}
+	        {% if node.level < max_depth %}
+	            <div class="child-comments{% if not node.is_root_node %} left-comment-indent{% endif %}">
+	                {{ children }}
+			        {# After the last child on each level we add the form to allow submission of a new comment at the children's level #}
+			        {# Note: the root node is NOT a real comment, but the first level of visible comments are still it's children #}
+		            <div class="comment-form new-comment{% if not node.is_root_node %} non-root{% endif %}">
+					    <div class="comment-hidden-fields">
 				            <input type="hidden" name="parent_id" value="{{ node.id }}">
 				            <input type="hidden" name="message">
 					    </div>
-					    <div class="comments-tree-container">
+					    <div class="comment-visible-fields">
 					        <input type="text" name="message_holder">
-					        <button type="button" class="action-trigger" data-action="post">Submit Comment</button>
+					        <button type="button" class="action-trigger" data-action="post-new">Submit Comment</button>
 					    </div>
 					</div>
-				{% endif %}
-			</div>
-    {% endrecursetree %}
-</div>
+	            </div>
+	        {% endif %}
+		</div>
+{% endrecursetree %}

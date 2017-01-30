@@ -79,7 +79,7 @@ def post_comment(request):
             'ok': True,
             'html_content': loader.render_to_string('comments/comments.html', context={
                                                                                    'request': request, 
-                                                                                   'nodes': parent_comment.get_descendants(include_self=True).select_related('deleted_user_info', 'created_by', 'parent', 'content_type').prefetch_related(Prefetch('versions', queryset=CommentVersion.objects.order_by('-date_posted').select_related('posting_user', 'deleted_user_info'))), 
+                                                                                   'nodes': [comment], # Since this is one comment, no need to optimize with select/prefetch related
                                                                                    'parent_object': parent_object,
                                                                                    'max_depth': tree_root.max_depth
                                                                                    })
@@ -145,17 +145,22 @@ def load_comments(request):
         })
         
     # Check if the user doesn't pass the appropriate permission check (on the parent_object)...
-    if not user_has_permission(request, tree_root.content_object, 'view_comments'):
+    if not user_has_permission(request, parent_object, 'view_comments'):
         return JsonResponse({ 
             'ok': False,
             'error_message': "You do not have permission to view comments for this object.",
         })
+        
+    # Once we have our desired nodes, we tack on all of the select/prefetch related stuff
+    nodes = tree_root.get_family().select_related('deleted_user_info', 'created_by', 'parent', 'content_type')\
+                                  .prefetch_related(Prefetch('versions', queryset=CommentVersion.objects.order_by('-date_posted')\
+                                                                                                        .select_related('posting_user', 'deleted_user_info')))
     
     return JsonResponse({ 
         'ok': True,
         'html_content': loader.render_to_string('comments/comments.html', context={
                                                                                    'request': request, 
-                                                                                   'nodes': tree_root.get_family().select_related('deleted_user_info', 'created_by', 'parent', 'content_type').prefetch_related(Prefetch('versions', queryset=CommentVersion.objects.order_by('-date_posted').select_related('posting_user', 'deleted_user_info'))), 
+                                                                                   'nodes': nodes, 
                                                                                    'parent_object': parent_object,
                                                                                    'max_depth': tree_root.max_depth
                                                                                    }),

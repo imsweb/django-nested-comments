@@ -23,9 +23,7 @@ def render_comments(parent_item, **kwargs):
     context = {
         'ct_id': ContentType.objects.get_for_model(parent_item).id,
         'obj_id': parent_item.id,
-        'initial_load': kwargs.get('initial_load', 0),
     }
-    
     return loader.render_to_string('comments/initialize.html', context)
 
 @register.assignment_tag(takes_context=True)
@@ -40,7 +38,7 @@ def _default_render_reply(**kwargs):
 
 @register.simple_tag(takes_context=True)
 def render_reply(context):
-    if user_has_permission(context['request'], context['parent_object'], 'can_edit_comment', default_function=_default_render_reply, comment=context['node'], context=context):
+    if user_has_permission(context['request'], context['parent_object'], 'can_reply_to_comment', default_function=_default_render_reply, comment=context['node'], context=context):
         return '<span class="action-trigger fake-link" data-action="reply">reply</span> -'
     return ''
 

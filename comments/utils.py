@@ -81,7 +81,7 @@ def _get_or_create_tree_root(request):
 def user_has_permission(request, parent_object, permission_function, default_function=None, **kwargs):
     """
         Allows the associated object to define its own permission functions.
-        If permission_function is not defined we fall back to 'is_authenticated()'.
+        If permission_function is not defined we first check if a "default" function was passed in, if not we fall back to "is_authenticated".
         NOTE: kwargs can pass any necessary objects to the permission function and will vary based on what permission we are checking.
     """
     if default_function:
