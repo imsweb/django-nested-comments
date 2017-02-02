@@ -6,16 +6,37 @@ from django.template.loader import render_to_string
 
 from ..utils import user_has_permission
 
+import json
+
 register = template.Library()
 
 @register.simple_tag()
-def initialize_comments():
-    # Have to wrap in "str()" because this dictionary is going to be directly interpreted by javascript (which doesn't accept unicode).
-    return str({
-        'getUrl': str(reverse('load-comments')),
-        'postUrl': str(reverse('post-comment')),
-        'deleteUrl': str(reverse('delete-comment')),
-    })
+def initialize_comments(**kwargs):
+    default_kwargs = {
+        'getUrl': reverse('load-comments'),
+        'postUrl': reverse('post-comment'),
+        'deleteUrl': reverse('delete-comment'),
+    }
+    # This mirrors the values in 'comments.js' to allow them to be overridden. All other kwargs are passed through the key 'kwargs'.
+    js_keys_overridden = set(kwargs.keys()).intersection(['actionTriggerSelector',
+                                                          'childCommentsSelector',
+                                                          'commentContainerSelector',
+                                                          'commentFormSelector',
+                                                          'hiddenFieldsSelector',
+                                                          'messageEditContainerSelector',
+                                                          'nodeContainerSelector',
+                                                          'originalMessageSelector',
+                                                          'postCommentLoadFunction',
+                                                          'rootContainerSelector',
+                                                          'getUrl',
+                                                          'postUrl',
+                                                          'deleteUrl'])
+    for item in js_keys_overridden:
+        default_kwargs[item] = kwargs.pop(item)
+    # Everything left in kwargs is passed through the generic 'kwargs' key. These values will ultimately be sent back via a signal in a header.
+    default_kwargs['kwargs'] = kwargs
+    # This will be fed directly into javascript, so we use json.dumps to ensure it can be interpreted.
+    return json.dumps(default_kwargs)
     
 @register.simple_tag()
 def render_comments(parent_item, **kwargs):
@@ -33,12 +54,10 @@ def get_latest_version(context):
         return context['node'].versions.all()[0]
     return None
 
-def _default_render_reply(**kwargs):
-    return kwargs['comment'].level < kwargs['context']['max_depth']
-
 @register.simple_tag(takes_context=True)
 def render_reply(context):
-    if user_has_permission(context['request'], context['parent_object'], 'can_reply_to_comment', default_function=_default_render_reply, comment=context['node'], context=context):
+    comment = context['node']
+    if user_has_permission(context['request'], context['parent_object'], 'can_reply_to_comment', comment=comment) and comment.level < context['max_depth']:
         return '<span class="action-trigger fake-link" data-action="reply">reply</span> -'
     return ''
 

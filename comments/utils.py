@@ -77,19 +77,22 @@ def _get_or_create_tree_root(request):
             raise InvalidCommentException("Unable to access comment tree: parent object not found.")
     else:
         raise InvalidCommentException("Unable to access comment tree: invalid request parameters.")
+    
+def get_attr_val(request, obj, attr, default=None, **kwargs):
+    """
+    This function attempts to get a value from the 'obj' through 'attr' (either a callable or a variable). 
+    If 'attr' is not defined on 'obj' then we attempt to fall back to the default.
+    """
+    if hasattr(obj, attr):
+        attr_holder = getattr(obj, attr)
+        if callable(attr_holder):
+            return attr_holder(request, **kwargs)
+        return attr_holder
+    return default
         
-def user_has_permission(request, parent_object, permission_function, default_function=None, **kwargs):
+def user_has_permission(request, parent_object, permission_function, **kwargs):
     """
-        Allows the associated object to define its own permission functions.
-        If permission_function is not defined we first check if a "default" function was passed in, if not we fall back to "is_authenticated".
-        NOTE: kwargs can pass any necessary objects to the permission function and will vary based on what permission we are checking.
+        Helper method that defaults all permission checks to "is_authenticated" if it is not defined on the parent_object.
     """
-    if default_function:
-        default_kwargs = {'request': request, 'parent_object': parent_object, 'permission_function': permission_function}
-        default_kwargs.update(kwargs)
-        auth = default_function(**default_kwargs)
-    else:
-        auth = request.user.is_authenticated()
-    if hasattr(parent_object, permission_function):
-        auth = getattr(parent_object, permission_function)(request, **kwargs)
-    return auth
+    default = request.user.is_authenticated()
+    return get_attr_val(request, parent_object, permission_function, default, **kwargs)

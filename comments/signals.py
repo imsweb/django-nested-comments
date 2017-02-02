@@ -1,4 +1,5 @@
 from django.dispatch import Signal
 
-# Sent when a comment is posted.
-comment_posted = Signal(providing_args=('request', 'message'))
+# The 'sender' will be the comment that changed
+# 'kwargs' will contain the dictionary passed back from the ajax call in the 'X_KWARGS' header
+comment_changed = Signal(providing_args=('request', 'version_saved', 'comment_action', 'kwargs'))

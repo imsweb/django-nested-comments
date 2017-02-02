@@ -17,9 +17,17 @@
 			            </div>
 			            <div class="comment-header-right">
 			                {# Rendered in simple tags to allow access to context (prevents extra queries) #}
-			                {% render_reply %}
-			                {% render_edit %}
-			                {% render_delete %}
+			                {% block reply_button %}
+			                    {% render_reply %}
+			                {% endblock reply_button %}
+			                
+			                {% block edit_button %}
+			                    {% render_edit %}
+			                {% endblock edit_button %}
+			                
+			                {% block delete_button %}
+			                    {% render_delete %}
+			                {% endblock delete_button %}
 			            </div>
 			        </div>
 			        <div class="comment-body">

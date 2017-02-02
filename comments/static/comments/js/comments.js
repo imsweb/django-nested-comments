@@ -18,6 +18,7 @@
     	}
     	var csrftoken = getCookie('csrftoken');
     	
+    	// These are mirrored in the 'initialize_comments' template tag. Any change here should be reflected there.
         var settings = $.extend({
         	actionTriggerSelector: ".action-trigger",
         	childCommentsSelector: ".child-comments",
@@ -28,6 +29,7 @@
         	nodeContainerSelector: ".comments-node-container",
         	originalMessageSelector: ".original-message",
         	rootContainerSelector: ".comments-root-container",
+        	kwargs: {},
         	
         	getUrl: null,
         	postUrl: null,
@@ -38,8 +40,10 @@
         	$(settings.nodeContainerSelector).each(function(){
         		var nodeContainer = this;
         		// TODO: Check for load_initial and skip if 0 (save us a hit on the server)
+        		
         		$.ajax({
         			url: settings.getUrl,
+        			beforeSend: function(xhr){xhr.setRequestHeader('X-KWARGS', JSON.stringify(settings.kwargs));},
         			data: $(nodeContainer).children(settings.hiddenFieldsSelector).find(':input').serialize(),
         			success: function(response) {
         				if (response.ok){
@@ -56,10 +60,11 @@
             	type: 'POST',
     			url: url,
     			data: $(dataContainer).find(':input').serialize(),
-    			beforeSend: function(xhr, settings) {
+    			beforeSend: function(xhr) {
     		        if (!this.crossDomain) {
     		            xhr.setRequestHeader("X-CSRFToken", csrftoken);
     		        }
+    		        xhr.setRequestHeader('X-KWARGS', JSON.stringify(settings.kwargs));
     		    },
     			success: function(response) {
     				if (response.ok){

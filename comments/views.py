@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models.query import Prefetch
@@ -10,7 +11,10 @@ from django.views.decorators.http import require_POST, require_GET
 
 from .forms import CommentVersionForm
 from .models import Comment, CommentVersion
-from .utils import InvalidCommentException, _get_target_comment, _get_or_create_tree_root, user_has_permission
+from .signals import comment_changed
+from .utils import InvalidCommentException, _get_target_comment, _get_or_create_tree_root, user_has_permission, get_attr_val
+
+import json
 
 @transaction.atomic
 @require_POST
@@ -75,20 +79,31 @@ def post_comment(request):
         new_version.comment = comment
         new_version.posting_user = request.user
         new_version.save()
+        
+        # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
+        kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
+        
+        # Now that the version has been saved, we fire off the appropriate signal before returning the rendered template
+        if previous_version:
+            comment_changed.send(sender=comment, request=request, version_saved=new_version, comment_action='edit', kwargs=kwargs)
+        else:
+            comment_changed.send(sender=comment, request=request, version_saved=new_version, comment_action='post', kwargs=kwargs)
+        
+        comments_template = get_attr_val(request, parent_object, 'comments_template', 'comments/comments.html')
+        kwargs.update({
+                       'request': request, 
+                       'nodes': [comment], # Since this is one comment, no need to optimize with select/prefetch related
+                       'parent_object': parent_object,
+                       'max_depth': tree_root.max_depth
+                       }) 
         return JsonResponse({ 
             'ok': True,
-            'html_content': loader.render_to_string('comments/comments.html', context={
-                                                                                   'request': request, 
-                                                                                   'nodes': [comment], # Since this is one comment, no need to optimize with select/prefetch related
-                                                                                   'parent_object': parent_object,
-                                                                                   'max_depth': tree_root.max_depth
-                                                                                   })
+            'html_content': loader.render_to_string(comments_template, context=kwargs)
         })
     else:
         return JsonResponse({ 
             'ok': False,
             'error_message': "There were errors in your submission. Please correct them and resubmit.",
-            'form_html': loader.render_to_string('comments/form.html', {'form': version_form})
         })
         
 @transaction.atomic
@@ -116,6 +131,9 @@ def delete_comment(request):
         })
     
     try:
+        # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
+        kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
+        comment_changed.send(sender=comment, request=request, version_saved=None, comment_action='pre_delete', kwargs=kwargs)
         # TODO: Should we have an option to flag the comment as deleted? (rather than actually deleting it)
         comment.delete()
         return JsonResponse({ 
@@ -156,14 +174,18 @@ def load_comments(request):
                                   .prefetch_related(Prefetch('versions', queryset=CommentVersion.objects.order_by('-date_posted')\
                                                                                                         .select_related('posting_user', 'deleted_user_info')))
     
+    comments_template = get_attr_val(request, parent_object, 'comments_template', 'comments/comments.html')
+    # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
+    kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
+    kwargs.update({
+                   'request': request, 
+                   'nodes': nodes, 
+                   'parent_object': parent_object,
+                   'max_depth': tree_root.max_depth
+                   }) 
     return JsonResponse({ 
         'ok': True,
-        'html_content': loader.render_to_string('comments/comments.html', context={
-                                                                                   'request': request, 
-                                                                                   'nodes': nodes, 
-                                                                                   'parent_object': parent_object,
-                                                                                   'max_depth': tree_root.max_depth
-                                                                                   }),
+        'html_content': loader.render_to_string(comments_template, context=kwargs),
     })
     
     
