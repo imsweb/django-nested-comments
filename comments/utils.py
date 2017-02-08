@@ -72,7 +72,11 @@ def _get_or_create_tree_root(request):
                 kwargs = {}
                 if hasattr(obj, 'max_comment_depth'):
                     kwargs['max_depth'] = getattr(obj, 'max_comment_depth')()
-                return Comment.objects.create(content_object=obj, **kwargs), obj
+                # This 'lock' ensures the creation process is done serially, since there is a built in race condition for mptt's 'tree_id' assignment
+                # The issue for mptt is here: https://github.com/django-mptt/django-mptt/issues/236
+                ct_lock = ContentType.objects.select_for_update().get(app_label='comments', model='comment')
+                comment = Comment.objects.create(content_object=obj, **kwargs)
+                return comment, obj
         except Exception, e:
             raise InvalidCommentException("Unable to access comment tree: parent object not found.")
     else:
