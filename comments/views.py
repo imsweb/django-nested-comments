@@ -26,6 +26,7 @@ def post_comment(request):
     try:
         comment, previous_version = _get_target_comment(request)
     except InvalidCommentException, e:
+        transaction.rollback()
         return JsonResponse({ 
             'ok': False,
             'error_message': e.message,
@@ -38,6 +39,7 @@ def post_comment(request):
     tree_root = parent_comment.get_root()
     parent_object = tree_root.content_object
     if not user_has_permission(request, parent_object, 'post_comment', comment=comment):
+        transaction.rollback()
         return JsonResponse({ 
             'ok': False,
             'error_message': "You do not have permission to post this comment.",
@@ -45,6 +47,7 @@ def post_comment(request):
      
     # Check to make sure we are not trying to save a comment "deeper" than we are allowed...   
     if parent_comment.level >= tree_root.max_depth:
+        transaction.rollback()
         return JsonResponse({ 
             'ok': False,
             'error_message': "You cannot respond this comment.",
@@ -59,6 +62,7 @@ def post_comment(request):
     try:
         Comment.objects.select_for_update(nowait=True).get(pk=comment.pk)
     except DatabaseError:
+        transaction.rollback()
         # Someone is already trying to update this comment, so we need to return an appropriate error
         return JsonResponse({ 
             'ok': False,
@@ -67,6 +71,7 @@ def post_comment(request):
     
     # Now we know we have sole access to the comment object at the moment so we need to check if we are editing the most recent version
     if previous_version and previous_version != comment.versions.latest():
+        transaction.rollback()
         return JsonResponse({ 
             'ok': False,
             'error_message': "You are not editing the most recent version of this comment. Please refresh your page and try again.",
@@ -101,6 +106,7 @@ def post_comment(request):
             'html_content': loader.render_to_string(comments_template, context=kwargs)
         })
     else:
+        transaction.rollback()
         return JsonResponse({ 
             'ok': False,
             'error_message': "There were errors in your submission. Please correct them and resubmit.",
@@ -113,6 +119,7 @@ def delete_comment(request):
     try:
         comment, previous_version = _get_target_comment(request)
     except InvalidCommentException, e:
+        transaction.rollback()
         return JsonResponse({ 
             'ok': False,
             'error_message': e.message,
@@ -125,6 +132,7 @@ def delete_comment(request):
     tree_root = parent_comment.get_root()
     parent_object = tree_root.content_object
     if not user_has_permission(request, parent_object, 'delete_comment', comment=comment):
+        transaction.rollback()
         return JsonResponse({ 
             'ok': False,
             'error_message': "You do not have permission to post this comment.",
@@ -141,6 +149,7 @@ def delete_comment(request):
         })
     except Exception, e:
         # TODO: Handle this more eloquently? Log? Probably best not to pass back raw error.
+        transaction.rollback()
         return JsonResponse({ 
             'ok': False,
             'error_message': 'There was an error deleting the selected comment(s).',
@@ -186,6 +195,7 @@ def load_comments(request):
     return JsonResponse({ 
         'ok': True,
         'html_content': loader.render_to_string(comments_template, context=kwargs),
+        'number_of_comments': tree_root.get_descendant_count()
     })
     
     

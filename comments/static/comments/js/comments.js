@@ -28,7 +28,9 @@
         	messageEditContainerSelector: ".message-edit-container",
         	nodeContainerSelector: ".comments-node-container",
         	originalMessageSelector: ".original-message",
+        	postCommentUpdatedFunction: function(){},
         	rootContainerSelector: ".comments-root-container",
+        	
         	kwargs: {},
         	
         	getUrl: null,
@@ -45,9 +47,11 @@
         			url: settings.getUrl,
         			beforeSend: function(xhr){xhr.setRequestHeader('X-KWARGS', JSON.stringify(settings.kwargs));},
         			data: $(nodeContainer).children(settings.hiddenFieldsSelector).find(':input').serialize(),
+        			settings: settings,
         			success: function(response) {
         				if (response.ok){
         					$(nodeContainer).find(settings.rootContainerSelector).empty().append(response.html_content);
+        					settings.postCommentUpdatedFunction();
         				}
         				// TODO: handle failure
         			}
@@ -60,6 +64,7 @@
             	type: 'POST',
     			url: url,
     			data: $(dataContainer).find(':input').serialize(),
+    			settings: settings,
     			beforeSend: function(xhr) {
     		        if (!this.crossDomain) {
     		            xhr.setRequestHeader("X-CSRFToken", csrftoken);
@@ -85,7 +90,7 @@
         			var commentForm = $(this).closest(settings.commentFormSelector);
         			
         			// Copy the message content over to the hidden field
-        			var message_holder = commentForm.find('input[name=message_holder]')
+        			var message_holder = commentForm.find('[name=message_holder]')
         			commentForm.find('input[name=message]').val(message_holder.val());
         			message_holder.val('');
         			
@@ -94,6 +99,7 @@
         			// Insert new comment directly before the comment form
                 	callback.done(function(response){
                 		$(commentForm).before(response.html_content);
+                		settings.postCommentUpdatedFunction();
                 	});
                 	var dataContainer = commentForm.children(settings.hiddenFieldsSelector);
                 	post_data(settings.postUrl, dataContainer, callback);
@@ -102,7 +108,7 @@
         			var commentForm = $(this).closest(settings.commentFormSelector);
         			
         			// Copy the message content over to the hidden field
-        			var message_holder = commentForm.find('input[name=message_holder]')
+        			var message_holder = commentForm.find('[name=message_holder]')
         			commentForm.find('input[name=message]').val(message_holder.val());
         			message_holder.val('');
         			
@@ -111,6 +117,7 @@
     				callback.done(function(response){
     					// Replace the comment being edited with the new version
             			commentContainer.empty().append(response.html_content);
+            			settings.postCommentUpdatedFunction();
     				});
     				var dataContainer = commentForm.children(settings.hiddenFieldsSelector);
     				post_data(settings.postUrl, dataContainer, callback);
@@ -127,6 +134,7 @@
         				var callback = $.Deferred();
         				callback.done(function(response){
         					$(nodeContainer).remove();
+        					settings.postCommentUpdatedFunction();
         				}).fail(function(response){
         					// TODO: Better error handling (customizable?)
         					alert("Comments could not be deleted");

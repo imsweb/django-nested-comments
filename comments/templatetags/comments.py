@@ -26,7 +26,7 @@ def initialize_comments(**kwargs):
                                                           'messageEditContainerSelector',
                                                           'nodeContainerSelector',
                                                           'originalMessageSelector',
-                                                          'postCommentLoadFunction',
+                                                          'postCommentUpdatedFunction',
                                                           'rootContainerSelector',
                                                           'getUrl',
                                                           'postUrl',
