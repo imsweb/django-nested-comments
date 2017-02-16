@@ -67,7 +67,7 @@ def _get_or_create_tree_root(request):
             obj_id = request.GET.get('obj_id')
             obj = ct.get_object_for_this_type(pk=obj_id)
             try:
-                return Comment.objects.get(object_id=obj_id, content_type=ct), obj
+                comment = Comment.objects.get(object_id=obj_id, content_type=ct)
             except Comment.DoesNotExist:
                 kwargs = {}
                 if hasattr(obj, 'max_comment_depth'):
@@ -76,7 +76,16 @@ def _get_or_create_tree_root(request):
                 # The issue for mptt is here: https://github.com/django-mptt/django-mptt/issues/236
                 ct_lock = ContentType.objects.select_for_update().get(app_label='comments', model='comment')
                 comment = Comment.objects.create(content_object=obj, **kwargs)
-                return comment, obj
+            
+            # This check adds one query to every ajax call, but I decided to put it here instead of in Comment.save to ensure integrity even between saves.  
+            try:
+                Comment.objects.get(parent=None, tree_id=comment.tree_id)
+            # If there are there are more than one 'root' comments (with no object_id) with the same tree_id...
+            except Comment.MultipleObjectsReturned:
+                # ...then we need to rebuild to ensure integrity
+                Comment.objects.rebuild()
+                
+            return comment, obj
         except Exception, e:
             raise InvalidCommentException("Unable to access comment tree: parent object not found.")
     else:
