@@ -12,7 +12,7 @@ from django.views.decorators.http import require_POST, require_GET
 from .forms import CommentVersionForm
 from .models import Comment, CommentVersion
 from .signals import comment_changed
-from .utils import InvalidCommentException, _get_target_comment, _get_or_create_tree_root, user_has_permission, get_attr_val
+from .utils import InvalidCommentException, _get_target_comment, _get_or_create_tree_root, _process_node_permissions, user_has_permission, get_attr_val
 
 import json
 
@@ -38,7 +38,7 @@ def post_comment(request):
     parent_comment = comment.parent
     tree_root = parent_comment.get_root()
     parent_object = tree_root.content_object
-    if not user_has_permission(request, parent_object, 'post_comment', comment=comment):
+    if not user_has_permission(request, parent_object, 'can_post_comment', comment=comment):
         transaction.set_rollback(True)
         return JsonResponse({ 
             'ok': False,
@@ -50,7 +50,7 @@ def post_comment(request):
         transaction.set_rollback(True)
         return JsonResponse({ 
             'ok': False,
-            'error_message': "You cannot respond this comment.",
+            'error_message': "You cannot respond to this comment.",
         })
     
     # If the comment object (NOT the message) hasn't been saved yet...
@@ -101,6 +101,10 @@ def post_comment(request):
                        'parent_object': parent_object,
                        'max_depth': tree_root.max_depth
                        }) 
+        
+        # Checks/assigns permissions to each node (so the template doesn't have to)
+        _process_node_permissions(**kwargs)
+        
         return JsonResponse({ 
             'ok': True,
             'html_content': loader.render_to_string(comments_template, context=kwargs)
@@ -131,7 +135,7 @@ def delete_comment(request):
     parent_comment = comment.parent
     tree_root = parent_comment.get_root()
     parent_object = tree_root.content_object
-    if not user_has_permission(request, parent_object, 'delete_comment', comment=comment):
+    if not user_has_permission(request, parent_object, 'can_delete_comment', comment=comment):
         transaction.set_rollback(True)
         return JsonResponse({ 
             'ok': False,
@@ -172,7 +176,7 @@ def load_comments(request):
         })
         
     # Check if the user doesn't pass the appropriate permission check (on the parent_object)...
-    if not user_has_permission(request, parent_object, 'view_comments'):
+    if not user_has_permission(request, parent_object, 'can_view_comments'):
         return JsonResponse({ 
             'ok': False,
             'error_message': "You do not have permission to view comments for this object.",
@@ -191,7 +195,11 @@ def load_comments(request):
                    'nodes': nodes, 
                    'parent_object': parent_object,
                    'max_depth': tree_root.max_depth
-                   }) 
+                   })
+    
+    # Checks/assigns permissions to each node (so the template doesn't have to)
+    _process_node_permissions(**kwargs)
+    
     return JsonResponse({ 
         'ok': True,
         'html_content': loader.render_to_string(comments_template, context=kwargs),

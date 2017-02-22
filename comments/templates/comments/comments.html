@@ -9,25 +9,41 @@
 			    <div class="comment-container">
 			        <div class="comment-header">
 			            <div class="comment-header-left">
-			                {{ node.created_by.first_name }} {{ node.created_by.last_name }} &lt;{{ node.created_by.email }}&gt; - {{ node.date_created|date:"M. d, Y, P" }}
-			                {% if node.versions.count > 1 %}
-			                    <br>
-			                    <span class="last_edited">Last edited by: {{ latest_version.posting_user.first_name }} {{ latest_version.posting_user.last_name }} &lt;{{ latest_version.posting_user.email }}&gt; - {{ latest_version.date_posted|date:"M. d, Y, P" }}</span>
-			                {% endif %}
+			                {% block comment-header-left %}
+				                {{ node.created_by.first_name }} {{ node.created_by.last_name }} &lt;{{ node.created_by.email }}&gt;
+				                {% if node.versions.count > 1 %}
+				                    <br>
+				                    <span class="last_edited">Last edited by: {{ latest_version.posting_user.first_name }} {{ latest_version.posting_user.last_name }} {{ latest_version.date_posted|date:"M. d, Y, P" }} This comment has been edited {{ node.versions.count|add:"-1" }} time{% if node.versions.count >= 3 %}s{% endif %}.</span>
+				                {% endif %}
+			                {% endblock comment-header-left %}
 			            </div>
 			            <div class="comment-header-right">
-			                {# Rendered in simple tags to allow access to context (prevents extra queries) #}
-			                {% block reply_button %}
-			                    {% render_reply %}
-			                {% endblock reply_button %}
-			                
-			                {% block edit_button %}
-			                    {% render_edit %}
-			                {% endblock edit_button %}
-			                
-			                {% block delete_button %}
-			                    {% render_delete %}
-			                {% endblock delete_button %}
+			                {% block comment-header-right %}
+			                    {{ node.date_created|date:"M. d, Y, P" }}
+				                {% block reply-button-container %}
+				                    {% if node.can_reply %}
+				                        {% block reply-button %}
+				                            <a href="#" aria-label="reply to comment" class="action-trigger" title="Reply to comment" data-action="reply">{% block reply_button_content %}reply{% endblock reply_button_content %}</a>
+				                        {% endblock reply-button %}
+				                    {% endif %}
+				                {% endblock reply-button-container %}
+				                
+				                {% block edit-button-container %}
+				                    {% if node.can_edit %}
+				                       {% block edit-button %}
+				                           <a href="#" aria-label="edit comment" class="action-trigger" title="Edit comment" data-action="edit">{% block edit-button-content %}edit{% endblock edit-button-content %}</a>
+				                       {% endblock edit-button %}
+				                    {% endif %}
+				                {% endblock edit-button-container %}
+				                
+				                {% block delete-button-container %}
+				                    {% if node.can_delete %}
+				                       {% block delete-button %}
+				                           <a href="#" aria-label="delete comment" class="action-trigger" title="Delete comments" data-action="delete">{% block delete-button-content %}delete{% endblock delete-button-content %}</a>
+				                       {% endblock delete-button %}
+				                    {% endif %}
+				                {% endblock delete-button-container %}
+			                {% endblock comment-header-right %}
 			            </div>
 			        </div>
 			        <div class="comment-body">

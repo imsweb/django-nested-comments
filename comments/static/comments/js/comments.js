@@ -130,7 +130,7 @@
         			commentContainer.find(settings.messageEditContainerSelector).first().toggle();
         			break;
         		case 'delete':
-        			if(confirm('Deleting this comment will remove all responses as well. Continue?')){
+        			if(confirm('Deleting this comment will remove ALL RESPONSES to this comment as well. Continue?')){
         				var callback = $.Deferred();
         				callback.done(function(response){
         					$(nodeContainer).remove();

@@ -91,6 +91,19 @@ def _get_or_create_tree_root(request):
     else:
         raise InvalidCommentException("Unable to access comment tree: invalid request parameters.")
     
+def _process_node_permissions(**kwargs):
+    """
+    This function checks and associates the three permissions (reply, edit, delete) to each comment node. This allows permission based access on a per comment basis.
+    """
+    request = kwargs.get('request', None)
+    parent_object = kwargs.get('parent_object', None)
+    max_depth = kwargs.get('max_depth', None)
+    for comment in kwargs.get('nodes', []):
+        comment.can_reply = user_has_permission(request, parent_object, 'can_reply_to_comment', comment=comment) and (comment.level < max_depth)
+        comment.can_edit = user_has_permission(request, parent_object, 'can_post_comment', comment=comment)
+        comment.can_delete = user_has_permission(request, parent_object, 'can_delete_comment', comment=comment)
+    
+    
 def get_attr_val(request, obj, attr, default=None, **kwargs):
     """
     This function attempts to get a value from the 'obj' through 'attr' (either a callable or a variable). 
@@ -99,7 +112,8 @@ def get_attr_val(request, obj, attr, default=None, **kwargs):
     if hasattr(obj, attr):
         attr_holder = getattr(obj, attr)
         if callable(attr_holder):
-            return attr_holder(request, **kwargs)
+            kwargs['request'] = kwargs.get('request', request)
+            return attr_holder(**kwargs)
         return attr_holder
     return default
         

@@ -52,24 +52,4 @@ def get_latest_version(context):
     # Since the versions were already ordered in the prefetch we just get the first one
     if context['node'].versions.count():
         return context['node'].versions.all()[0]
-    return None
-
-@register.simple_tag(takes_context=True)
-def render_reply(context):
-    comment = context['node']
-    if user_has_permission(context['request'], context['parent_object'], 'can_reply_to_comment', comment=comment) and comment.level < context['max_depth']:
-        return '<span class="action-trigger fake-link" data-action="reply">reply</span> -'
-    return ''
-
-@register.simple_tag(takes_context=True)
-def render_edit(context):
-    if user_has_permission(context['request'], context['parent_object'], 'can_edit_comment', comment=context['node']):
-        return '<span class="action-trigger fake-link" data-action="edit">edit</span> -'
-    return ''
-
-@register.simple_tag(takes_context=True)
-def render_delete(context):
-    if user_has_permission(context['request'], context['parent_object'], 'can_delete_comment', comment=context['node']):
-        return '<span class="action-trigger fake-link" data-action="delete">delete</span>'
-    return ''
-    
+    return None  
