@@ -12,29 +12,15 @@
 	width: 100%;
 }
 
-.comment-header-left, .comment-header-right { display: table-cell; }
-.comment-header-right {
-	position: absolute;
-	right: 0;
-	bottom: 5px;
+.float-right {
+	float: right;
 }
 
 .comment-form.non-root { margin: 5px 0 15px 0; }
 .comment-form.non-root { padding: 5px 0 5px 0; }
 
-.original-message { margin-left: 5px; font-size: larger; }
+.original-message { margin-left: 5px; }
 .comment-body { margin: 10px 0 15px 0; }
-.last_edited { font-size: smaller; font-style: italic; }
-
-.fake-link {
-     background:none!important;
-     border:none; 
-     padding:0!important;
-     font: inherit;
-     border-bottom:1px solid #444; 
-     cursor: pointer;
-}
-
 .comment-form.non-root.new-comment, .message-edit-container {
 	display: none;
 }
