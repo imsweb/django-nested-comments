@@ -1,0 +1,65 @@
+<a id="comment-{{ node.pk }}" class="comment-anchor"></a>
+<div class="comment-container">
+    {% block comment-header %}
+        <div class="{% block comment-header-class %}comment-header{% endblock comment-header-class %}">
+            <div class="{% block comment-header-left-class %}{% endblock comment-header-left-class %}">
+                {% block comment-header-left %}
+                    <span class="{% block created-by-name-class %}{% endblock created-by-name-class %}">{{ node.created_by.first_name }} {{ node.created_by.last_name }}</span> {% block created-by-email %}&lt;{{ node.created_by.email }}&gt;{% endblock created-by-email %}
+                    {% if node.versions.count > 1 %}
+                        <br>
+                        <span class="{% block last-edited-class %}{% endblock last-edited-class %}">Last edited by: {{ latest_version.posting_user.first_name }} {{ latest_version.posting_user.last_name }} {{ latest_version.date_posted|date:"M. d, Y, P" }} This comment has been edited {{ node.versions.count|add:"-1" }} time{% if node.versions.count >= 3 %}s{% endif %}.</span>
+                    {% endif %}
+                {% endblock comment-header-left %}
+            </div>
+            <div class="{% block comment-header-right-class %}float-right{% endblock comment-header-right-class %}">
+                {% block comment-header-right %}
+                    <span class="{% block date-created-class %}{% endblock date-created-class %}">{{ node.date_created|date:"M. d, Y, P" }}</span>
+                    {% block reply-button-container %}
+                        {% if node.can_reply %}
+                            {% block reply-button %}
+                                <a href="#" aria-label="reply to comment" class="action-trigger" title="Reply to comment" data-action="reply">{% block reply_button_content %}reply{% endblock reply_button_content %}</a>
+                            {% endblock reply-button %}
+                        {% endif %}
+                    {% endblock reply-button-container %}
+                    
+                    {% block edit-button-container %}
+                        {% if node.can_edit %}
+                           {% block edit-button %}
+                               <a href="#" aria-label="edit comment" class="action-trigger" title="Edit comment" data-action="edit">{% block edit-button-content %}edit{% endblock edit-button-content %}</a>
+                           {% endblock edit-button %}
+                        {% endif %}
+                    {% endblock edit-button-container %}
+                    
+                    {% block delete-button-container %}
+                        {% if node.can_delete %}
+                           {% block delete-button %}
+                               <a href="#" aria-label="delete comment" class="action-trigger" title="Delete comments" data-action="delete">{% block delete-button-content %}delete{% endblock delete-button-content %}</a>
+                           {% endblock delete-button %}
+                        {% endif %}
+                    {% endblock delete-button-container %}
+                {% endblock comment-header-right %}
+                
+                {% block link-button-container %}
+                    <a href="#comment-{{ node.pk }}" aria-label="link to comment" title="Link to comment"><i class="fa fa-link" aria-hidden="true"></i><span class="hidden-xs" aria-hidden="true">Link</span></a>
+                {% endblock link-button-container %}
+            </div>
+        </div>
+    {% endblock comment-header %}
+    {% block comment-body %}
+        <div class="comment-body">
+            <span class="original-message">{{ latest_version.message|safe }}</span>
+            <div class="message-edit-container">
+                <div class="comment-form edit-comment{% if not node.is_root_node %} non-root{% endif %}">
+                    <div class="comment-hidden-fields">
+                        <input type="hidden" name="version_id" value="{{ latest_version.id }}">
+                        <input type="hidden" name="message">
+                    </div>
+                    <div class="comment-visible-fields">
+                        <textarea class="{% block edit_textarea_class %}{% endblock edit_textarea_class %}" name="message_holder">{{ latest_version.message|safe }}</textarea>
+                        <button type="button" class="action-trigger" data-action="post-edit">Submit Edit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endblock comment-body %}
+</div>

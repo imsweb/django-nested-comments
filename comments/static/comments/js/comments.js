@@ -117,7 +117,7 @@
     				// TODO: Better error handling (customizable?)
     				callback.done(function(response){
     					// Replace the comment being edited with the new version
-            			commentContainer.empty().append(response.html_content);
+            			commentContainer.empty().replaceWith(response.html_content);
             			settings.postCommentUpdatedFunction();
     				});
     				var dataContainer = commentForm.children(settings.hiddenFieldsSelector);

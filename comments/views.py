@@ -91,13 +91,16 @@ def post_comment(request):
         # Now that the version has been saved, we fire off the appropriate signal before returning the rendered template
         if previous_version:
             comment_changed.send(sender=comment, request=request, version_saved=new_version, comment_action='edit', kwargs=kwargs)
+            comment_template = get_attr_val(request, parent_object, 'single_comment_template', 'comments/comments.html')
         else:
             comment_changed.send(sender=comment, request=request, version_saved=new_version, comment_action='post', kwargs=kwargs)
+            comment_template = get_attr_val(request, parent_object, 'comments_template', 'comments/comments.html')
         
-        comments_template = get_attr_val(request, parent_object, 'comments_template', 'comments/comments.html')
         kwargs.update({
                        'request': request, 
-                       'nodes': [comment], # Since this is one comment, no need to optimize with select/prefetch related
+                       'node': comment,
+                       'nodes': [comment], # We need both because of _process_node_permissions and the fact that 'post' requires the full comments template
+                       'latest_version': comment.versions.latest(),
                        'parent_object': parent_object,
                        'max_depth': tree_root.max_depth
                        }) 
@@ -107,7 +110,7 @@ def post_comment(request):
         
         return JsonResponse({ 
             'ok': True,
-            'html_content': loader.render_to_string(comments_template, context=kwargs)
+            'html_content': loader.render_to_string(comment_template, context=kwargs)
         })
     else:
         transaction.set_rollback(True)
