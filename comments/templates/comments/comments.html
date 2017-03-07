@@ -6,6 +6,7 @@
         <div class="comments-node-container" data-level="{{ node.level }}">
             {# We skip the root node because it is used as a link to the parent_object (not an actual comment) #}
 	        {% if not node.is_root_node %}
+	            <div id="comment-{{ node.pk }}" class="permalink"></div>
 			    <div class="comment-container">
 			        {% block comment-header %}
 				        <div class="{% block comment-header-class %}comment-header{% endblock comment-header-class %}">
@@ -45,24 +46,30 @@
 					                    {% endif %}
 					                {% endblock delete-button-container %}
 				                {% endblock comment-header-right %}
+				                
+				                {% block link-button-container %}
+			                        <a href="#comment-{{ node.pk }}" aria-label="link to comment" title="Link to comment"><i class="fa fa-link" aria-hidden="true"></i><span class="hidden-xs" aria-hidden="true">Link</span></a>
+			                    {% endblock link-button-container %}
 				            </div>
 				        </div>
 			        {% endblock comment-header %}
-			        <div class="comment-body">
-			            <span class="original-message">{{ latest_version.message|safe }}</span>
-			            <div class="message-edit-container">
-                            <div class="comment-form edit-comment{% if not node.is_root_node %} non-root{% endif %}">
-		                        <div class="comment-hidden-fields">
-		                            <input type="hidden" name="version_id" value="{{ latest_version.id }}">
-                                    <input type="hidden" name="message">
-		                        </div>
-		                        <div class="comment-visible-fields">
-							        <textarea class="{% block edit_textarea_class %}{% endblock edit_textarea_class %}" name="message_holder">{{ latest_version.message|safe }}</textarea>
-		                            <button type="button" class="action-trigger" data-action="post-edit">Submit Edit</button>
-		                        </div>
-		                    </div>
-			            </div>
-			        </div>
+			        {% block comment-body %}
+				        <div class="comment-body">
+				            <span class="original-message">{{ latest_version.message|safe }}</span>
+				            <div class="message-edit-container">
+	                            <div class="comment-form edit-comment{% if not node.is_root_node %} non-root{% endif %}">
+			                        <div class="comment-hidden-fields">
+			                            <input type="hidden" name="version_id" value="{{ latest_version.id }}">
+	                                    <input type="hidden" name="message">
+			                        </div>
+			                        <div class="comment-visible-fields">
+								        <textarea class="{% block edit_textarea_class %}{% endblock edit_textarea_class %}" name="message_holder">{{ latest_version.message|safe }}</textarea>
+			                            <button type="button" class="action-trigger" data-action="post-edit">Submit Edit</button>
+			                        </div>
+			                    </div>
+				            </div>
+				        </div>
+			        {% endblock comment-body %}
 			    </div>
 	        {% endif %}
 	        {% if node.level < max_depth %}

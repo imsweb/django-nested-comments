@@ -29,6 +29,7 @@
         	nodeContainerSelector: ".comments-node-container",
         	originalMessageSelector: ".original-message",
         	postCommentUpdatedFunction: function(){},
+        	postCommentLoadFunction: function(){},
         	rootContainerSelector: ".comments-root-container",
         	
         	kwargs: {},
@@ -51,7 +52,7 @@
         			success: function(response) {
         				if (response.ok){
         					$(nodeContainer).find(settings.rootContainerSelector).empty().append(response.html_content);
-        					settings.postCommentUpdatedFunction();
+        					settings.postCommentLoadFunction();
         				}
         				// TODO: handle failure
         			}
