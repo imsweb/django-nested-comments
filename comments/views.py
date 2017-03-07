@@ -100,7 +100,7 @@ def post_comment(request):
                        'request': request, 
                        'node': comment,
                        'nodes': [comment], # We need both because of _process_node_permissions and the fact that 'post' requires the full comments template
-                       'latest_version': comment.versions.latest(),
+                       'latest_version': comment.versions.latest(), # We need this here because the latest version is not available inside the single comment template (used for edit)
                        'parent_object': parent_object,
                        'max_depth': tree_root.max_depth
                        }) 
