@@ -162,6 +162,7 @@ def delete_comment(request):
             'error_message': 'There was an error deleting the selected comment(s).',
         })
 
+@transaction.atomic
 @require_GET
 def load_comments(request):
     """
@@ -208,11 +209,3 @@ def load_comments(request):
         'html_content': loader.render_to_string(comments_template, context=kwargs),
         'number_of_comments': tree_root.get_descendant_count()
     })
-    
-    
-    
-        
-    
-    
-        
-        
