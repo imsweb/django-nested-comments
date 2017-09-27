@@ -22,18 +22,28 @@ class Comment (MPTTModel):
     This is the 'node' model of a comment tree.
     NOTE: The root object (the one with a content_object and no parent) is NOT a real comment, but allows for associating to any object.
     """
+    
     parent = TreeForeignKey('self', null=True, blank=True, db_index=True)
+    """ The parent comment, NULL if this is the root "comment" """
+    
     date_created = models.DateTimeField(default=timezone.now, editable=False)
+    """ The date the comment was created (defaults to timezone.now) """
+    
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, related_name='comments', null=True, blank=True)
+    """ The User object (via FK to AUTH_USER_MODEL) that created this comment (originally) """
+    
     deleted_user_info = models.ForeignKey(DeletedUserInfo, on_delete=models.SET_NULL, null=True, blank=True)
+    """ If the user that created a comment is deleted, their information is associated here """
+    
     max_depth = models.IntegerField(default=2)
+    """ The maximum depth this comment tree can be (1 based), only really read from the root "comment" """
     
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, blank=True, null=True)
     object_id = models.PositiveIntegerField(blank=True, null=True)
     content_object = GenericForeignKey()
     
-    # User-defined data, stored as JSON in a text field.
     data = JSONField(null=True)
+    """ User-defined data, stored as JSON in a text field. """
     
     class MPTTMeta:
         order_insertion_by  = 'date_created'
@@ -54,7 +64,7 @@ def store_deleted_user(sender, **kwargs):
     instance = kwargs.get('instance', None)
     if instance:
         # TODO: Make this more generic? There is no guarantee that these values are applicable since we are using AUTH_USER_MODEL
-        user_info = DeletedUserInfo.objects.get_or_create(first_name=instance.first_name, last_name=instance.last_name, email=instance.email)[0]
+        user_info = DeletedUserInfo.objects.get_or_create(first_name=getattr(instance, first_name), last_name=getattr(instance, last_name), email=getattr(instance, email))[0]
         for comment in Comment.objects.filter(created_by=instance):
             comment.deleted_user_info = user_info
             comment.save()
