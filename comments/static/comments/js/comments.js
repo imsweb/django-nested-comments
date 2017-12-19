@@ -28,9 +28,47 @@
         	messageEditContainerSelector: ".message-edit-container",
         	nodeContainerSelector: ".comments-node-container",
         	originalMessageSelector: ".original-message",
-        	postCommentUpdatedFunction: function(){},
-        	postCommentLoadFunction: function(){},
+        	deleteCommentFunction: function(settings, nodeContainer, commentContainer) {
+        		if(confirm('Deleting this comment will remove ALL RESPONSES to this comment as well. Continue?')){
+    				var callback = $.Deferred();
+    				callback.done(function(response){
+    					settings.postCommentDeleteFunction(settings, nodeContainer);
+    					settings.postCommentUpdatedFunction(settings);
+    				}).fail(function(response){
+    					// TODO: Better error handling (customizable?)
+    					alert("Comments could not be deleted");
+    				});
+    				var dataContainer = commentContainer.find(settings.hiddenFieldsSelector);
+    				settings.post_data(settings.deleteUrl, dataContainer, callback);
+    			}
+        	},
+        	post_data: function(url, dataContainer, callback) {
+                $.ajax({
+                	type: 'POST',
+        			url: url,
+        			data: $(dataContainer).find(':input').serialize(),
+        			settings: settings,
+        			beforeSend: function(xhr) {
+        		        if (!this.crossDomain) {
+        		            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        		        }
+        		        xhr.setRequestHeader('X-KWARGS', JSON.stringify(settings.kwargs));
+        		    },
+        			success: function(response) {
+        				if (response.ok){
+        					callback.resolve(response);
+        				} else {
+        					callback.reject(response);
+        				}
+        			}
+        		});
+            },
+        	preCommentLoadFunction: function(settings) {},
+        	postCommentUpdatedFunction: function(settings){},
+        	postCommentLoadFunction: function(settings){},
+        	postCommentDeleteFunction: function(settings, nodeContainer) {$(nodeContainer).remove();},
         	rootContainerSelector: ".comments-root-container",
+        	hideCommentLevelOneBox: false,
         	
         	kwargs: {},
         	
@@ -43,43 +81,23 @@
         	$(settings.nodeContainerSelector).each(function(){
         		var nodeContainer = this;
         		// TODO: Check for load_initial and skip if 0 (save us a hit on the server)
-        		
         		$.ajax({
         			url: settings.getUrl,
-        			beforeSend: function(xhr){xhr.setRequestHeader('X-KWARGS', JSON.stringify(settings.kwargs));},
+        			beforeSend: function(xhr){settings.preCommentLoadFunction(settings); xhr.setRequestHeader('X-KWARGS', JSON.stringify(settings.kwargs));},
         			data: $(nodeContainer).children(settings.hiddenFieldsSelector).find(':input').serialize(),
         			settings: settings,
         			success: function(response) {
         				if (response.ok){
         					$(nodeContainer).find(settings.rootContainerSelector).empty().append(response.html_content);
-        					settings.postCommentLoadFunction();
+        					if (settings.hideCommentLevelOneBox) {
+        		        		$(".root").remove();
+        		        	}
+        					settings.postCommentLoadFunction(settings);
         				}
         				// TODO: handle failure
         			}
         		});
-        	})
-        };
-
-        var post_data = function(url, dataContainer, callback) {
-            $.ajax({
-            	type: 'POST',
-    			url: url,
-    			data: $(dataContainer).find(':input').serialize(),
-    			settings: settings,
-    			beforeSend: function(xhr) {
-    		        if (!this.crossDomain) {
-    		            xhr.setRequestHeader("X-CSRFToken", csrftoken);
-    		        }
-    		        xhr.setRequestHeader('X-KWARGS', JSON.stringify(settings.kwargs));
-    		    },
-    			success: function(response) {
-    				if (response.ok){
-    					callback.resolve(response);
-    				} else {
-    					callback.reject(response);
-    				}
-    			}
-    		});
+        	});
         };
         
         // Group all "click handlers" here
@@ -100,10 +118,10 @@
         			// Insert new comment directly before the comment form
                 	callback.done(function(response){
                 		$(commentForm).before(response.html_content);
-                		settings.postCommentUpdatedFunction();
+                		settings.postCommentUpdatedFunction(settings);
                 	});
                 	var dataContainer = commentForm.children(settings.hiddenFieldsSelector);
-                	post_data(settings.postUrl, dataContainer, callback);
+                	settings.post_data(settings.postUrl, dataContainer, callback);
                 	break;
         		case 'post-edit':
         			var commentForm = $(this).closest(settings.commentFormSelector);
@@ -118,10 +136,10 @@
     				callback.done(function(response){
     					// Replace the comment being edited with the new version
             			commentContainer.empty().replaceWith(response.html_content);
-            			settings.postCommentUpdatedFunction();
+            			settings.postCommentUpdatedFunction(settings);
     				});
     				var dataContainer = commentForm.children(settings.hiddenFieldsSelector);
-    				post_data(settings.postUrl, dataContainer, callback);
+    				settings.post_data(settings.postUrl, dataContainer, callback);
         			break;
         		case 'reply':
         			nodeContainer.children(settings.childCommentsSelector).children(settings.commentFormSelector).toggle();
@@ -131,18 +149,7 @@
         			commentContainer.find(settings.messageEditContainerSelector).first().toggle();
         			break;
         		case 'delete':
-        			if(confirm('Deleting this comment will remove ALL RESPONSES to this comment as well. Continue?')){
-        				var callback = $.Deferred();
-        				callback.done(function(response){
-        					$(nodeContainer).remove();
-        					settings.postCommentUpdatedFunction();
-        				}).fail(function(response){
-        					// TODO: Better error handling (customizable?)
-        					alert("Comments could not be deleted");
-        				});
-        				var dataContainer = commentContainer.find(settings.hiddenFieldsSelector);
-        				post_data(settings.deleteUrl, dataContainer, callback);
-        			}
+        			settings.deleteCommentFunction(settings, nodeContainer, commentContainer);
         			break;
         	}
         	return false;

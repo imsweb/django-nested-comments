@@ -1,8 +1,8 @@
-from django.conf.urls import patterns, url
-from .views import load_comments
+from django.conf.urls import url
+import views as comment_views
 
-urlpatterns = patterns('comments.views',
-   url(r'^load_comments/$', 'load_comments', name='load-comments'),
-   url(r'^post_comment/$', 'post_comment', name='post-comment'),
-   url(r'^delete_comment/$', 'delete_comment', name='delete-comment'),
-)
+urlpatterns = [
+    url(r'^load_comments/$', comment_views.load_comments, name='load-comments'),
+    url(r'^post_comment/$', comment_views.post_comment, name='post-comment'),
+    url(r'^delete_comment/$', comment_views.delete_comment, name='delete-comment'),
+]

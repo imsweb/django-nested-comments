@@ -4,7 +4,7 @@ from django.core.urlresolvers import reverse
 from django.template import loader
 from django.template.loader import render_to_string
 
-from ..utils import user_has_permission
+from ..utils import user_has_permission, get_attr_val
 
 import json
 
@@ -26,9 +26,13 @@ def initialize_comments(**kwargs):
                                                           'messageEditContainerSelector',
                                                           'nodeContainerSelector',
                                                           'originalMessageSelector',
+                                                          'deleteCommentFunction',
+                                                          'post_data',
+                                                          'preCommentLoadFunction',
                                                           'postCommentUpdatedFunction',
                                                           'postCommentLoadFunction',
                                                           'rootContainerSelector',
+                                                          'hideCommentLevelOneBox',
                                                           'getUrl',
                                                           'postUrl',
                                                           'deleteUrl'])
@@ -53,4 +57,8 @@ def get_latest_version(context):
     # Since the versions were already ordered in the prefetch we just get the first one
     if context['node'].versions.count():
         return context['node'].versions.all()[0]
-    return None  
+    return None
+
+@register.assignment_tag
+def get_comment_visibility(request, parent_object, comment):
+    return get_attr_val(request, parent_object, 'check_comment_visibility', default=(not comment.deleted), comment=comment)

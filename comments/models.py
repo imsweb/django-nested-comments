@@ -1,13 +1,13 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils import timezone
 from mptt.models import MPTTModel, TreeForeignKey
 
-from .utils import JSONField
 
 class DeletedUserInfo (models.Model):
     """
@@ -45,12 +45,15 @@ class Comment (MPTTModel):
     data = JSONField(null=True)
     """ User-defined data, stored as JSON in a text field. """
     
+    deleted = models.BooleanField(default=False)
+    """ deleted flag if the comment was deleted by the user """
+    
     class MPTTMeta:
         order_insertion_by  = 'date_created'
     
 class CommentVersion (models.Model):
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='versions')
-    message = models.TextField()
+    message = models.TextField(blank=True)
     date_posted = models.DateTimeField(default=timezone.now, editable=False)
     posting_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     deleted_user_info = models.ForeignKey(DeletedUserInfo, on_delete=models.SET_NULL, null=True, blank=True)

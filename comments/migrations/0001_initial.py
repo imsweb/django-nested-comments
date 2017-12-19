@@ -5,7 +5,7 @@ from django.db import migrations, models
 import mptt.fields
 import django.utils.timezone
 from django.conf import settings
-import comments.utils
+from django.contrib.postgres.fields import JSONField
 
 
 class Migration(migrations.Migration):
@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('date_created', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('object_id', models.PositiveIntegerField(null=True, blank=True)),
-                ('data', comments.utils.JSONField(null=True)),
+                ('data', JSONField(null=True)),
                 ('lft', models.PositiveIntegerField(editable=False, db_index=True)),
                 ('rght', models.PositiveIntegerField(editable=False, db_index=True)),
                 ('tree_id', models.PositiveIntegerField(editable=False, db_index=True)),

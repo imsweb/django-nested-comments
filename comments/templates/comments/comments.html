@@ -3,6 +3,8 @@
 
 {% recursetree nodes %}
     {% get_latest_version as latest_version %}
+	{% get_comment_visibility request parent_object node as visible %}
+    {% if visible %}
         <div class="comments-node-container" data-level="{{ node.level }}">
             {# We skip the root node because it is used as a link to the parent_object (not an actual comment) #}
 	        {% if not node.is_root_node %}
@@ -15,7 +17,7 @@
 	                {{ children }}
 			        {# After the last child on each level we add the form to allow submission of a new comment at the children's level #}
 			        {# Note: the root node is NOT a real comment, but the first level of visible comments are still it's children #}
-		            <div class="comment-form new-comment{% if not node.is_root_node %} non-root{% endif %}">
+		            <div class="comment-form new-comment {{ node.is_root_node|yesno:'root,non-root' }}">
 					    <div class="comment-hidden-fields">
 				            <input type="hidden" name="parent_id" value="{{ node.id }}">
 				            <input type="hidden" name="message">
@@ -23,9 +25,11 @@
 					    <div class="comment-visible-fields">
 					        <textarea class="{% block post_textarea_class %}{% endblock post_textarea_class %}" name="message_holder"></textarea>
 					        <button type="button" class="action-trigger" data-action="post-new">{% if node.is_root_node %}Submit New Comment{% else %}Submit Response{% endif %}</button>
+					    	{% block extra_buttons %}{% endblock %}
 					    </div>
 					</div>
 	            </div>
 	        {% endif %}
 		</div>
+	{% endif %}
 {% endrecursetree %}
