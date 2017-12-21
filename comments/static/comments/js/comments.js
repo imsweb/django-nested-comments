@@ -68,7 +68,6 @@
         	postCommentLoadFunction: function(settings){},
         	postCommentDeleteFunction: function(settings, nodeContainer) {$(nodeContainer).remove();},
         	rootContainerSelector: ".comments-root-container",
-        	hideCommentLevelOneBox: false,
         	
         	kwargs: {},
         	
@@ -89,9 +88,6 @@
         			success: function(response) {
         				if (response.ok){
         					$(nodeContainer).find(settings.rootContainerSelector).empty().append(response.html_content);
-        					if (settings.hideCommentLevelOneBox) {
-        		        		$(".root").remove();
-        		        	}
         					settings.postCommentLoadFunction(settings);
         				}
         				// TODO: handle failure

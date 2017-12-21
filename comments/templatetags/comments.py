@@ -32,7 +32,6 @@ def initialize_comments(**kwargs):
                                                           'postCommentUpdatedFunction',
                                                           'postCommentLoadFunction',
                                                           'rootContainerSelector',
-                                                          'hideCommentLevelOneBox',
                                                           'getUrl',
                                                           'postUrl',
                                                           'deleteUrl'])

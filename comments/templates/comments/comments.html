@@ -17,6 +17,7 @@
 	                {{ children }}
 			        {# After the last child on each level we add the form to allow submission of a new comment at the children's level #}
 			        {# Note: the root node is NOT a real comment, but the first level of visible comments are still it's children #}
+			        {% block new_comment %}
 		            <div class="comment-form new-comment {{ node.is_root_node|yesno:'root,non-root' }}">
 					    <div class="comment-hidden-fields">
 				            <input type="hidden" name="parent_id" value="{{ node.id }}">
@@ -28,6 +29,7 @@
 					    	{% block extra_buttons %}{% endblock %}
 					    </div>
 					</div>
+					{% endblock %}
 	            </div>
 	        {% endif %}
 		</div>

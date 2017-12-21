@@ -69,7 +69,6 @@ for components of the templates used to render the comment tree. They will only 
     * ``postCommentLoadFunction`` - Callback function that will be executed after a comment tree has been loaded via ajax.
     * ``postCommentDeleteFunction`` - Callback function that will be executed after a comment is deleted via ajax.
     * ``rootContainerSelector`` - Selector for the comment root, which is a container that holds all comments (but NOT the highest level 'hiddenFieldsSelector' object). This is the element that emptied and appended to on each full comment tree load.
-    * ``hideCommentLevelOneBox`` - Boolean flag to indicate if the level one new comment textarea should be rendered on the page.
     * ``getUrl`` - URL called to load the comment tree.
     * ``postUrl`` - URL called to post/edit a comment.
     * ``deleteUrl`` - URL called to delete a comment.
