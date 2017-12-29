@@ -260,18 +260,19 @@ def load_comments(request):
                                   .prefetch_related(Prefetch('versions', queryset=CommentVersion.objects.order_by('-date_posted')\
                                                                                                         .select_related('posting_user', 'deleted_user_info')))
     
-    # Sites can define a function 'additional_load_processing' to apply any additional logic to the nodes queryset before it's rendered to the template
-    nodes = get_attr_val(request, parent_object, "additional_load_processing", default=nodes, nodes=nodes, user=request.user, parent_object=parent_object)
-    
     comments_template = get_attr_val(request, parent_object, 'comments_template', 'comments/comments.html')
     # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
     kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
     kwargs.update({
-                   'request': request, 
-                   'nodes': nodes, 
+                   'nodes': nodes,
                    'parent_object': parent_object,
                    'max_depth': tree_root.max_depth
                    })
+    
+    # In the parent_object, sites can define a function called 'filter_nodes' if they wish to apply any additional filtering to the nodes queryset before it's rendered to the template.
+    # Default value is the nodes tree with the deleted comments filtered out.
+    nodes = get_attr_val(request, parent_object, "filter_nodes", default=nodes.filter(deleted=False), **kwargs)
+    kwargs.update({"nodes": nodes, 'request': request})
     
     # Checks/assigns permissions to each node (so the template doesn't have to)
     _process_node_permissions(**kwargs)

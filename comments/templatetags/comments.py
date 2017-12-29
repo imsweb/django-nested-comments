@@ -57,7 +57,3 @@ def get_latest_version(context):
     if context['node'].versions.count():
         return context['node'].versions.all()[0]
     return None
-
-@register.assignment_tag
-def get_comment_visibility(request, parent_object, comment):
-    return get_attr_val(request, parent_object, 'check_comment_visibility', default=(not comment.deleted), comment=comment)
