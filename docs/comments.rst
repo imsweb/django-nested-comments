@@ -18,6 +18,8 @@ This app comes with a few built in template tags that allow for simple integrati
         1) It sets default values for some of the javascript settings that need access to Django tags to be populated (ex. URLs)
         2) It filters the 'kwargs' passed in and takes those that do not override javascript settings and puts them in a variable labeled 'kwargs'
     * ``render_comments`` - Renders the initialization template with the content type/id of the parent object.
+    * ``get_latest_version`` - Returns the latest version of a Comment using Context.
+    * ``get_comment_visibility`` - This template tag returns a boolean that determines if a comment should be rendered on the page.
 
 Customization
 =============
@@ -39,6 +41,7 @@ Functions:
     * ``can_reply_to_comment(request, comment)`` - Function that returns a boolean. True if the user is allowed to reply to the given comment. 'Reply' means to create a comment that is nested under the given comment.
     * ``can_post_comment(request, comment)`` - Function that returns a boolean. True if the user is allowed to post/edit the given comment. 
     * ``can_delete_comment(request, comment)`` - Function that returns a boolean. True if the user is allowed to delete the given comment.
+    * ``additional_load_processing(nodes, user, parent_object)`` - An optional function that allows sites to apply any additional processing to the nodes before they are rendered on the page.  This function must be defined in the parent_object class and must return the nodes.
     
 Javascript
 ----------
@@ -58,9 +61,13 @@ for components of the templates used to render the comment tree. They will only 
     * ``commentFormSelector`` - Selector for containers that hold the form fields for a comment (essentially a form).
     * ``hiddenFieldsSelector`` - Selector for containers holding the hidden fields that will be included with http requests. By default these containers are inside 'commentFormSelector' containers.
     * ``messageEditContainerSelector`` - Selector for containers that hold the 'commentFormSelector' containers for an existing comment. This is used to toggle between a comments content and a form to edit it.
-    * ``originalMessageSelector`` - Selector for the original comment content for an existing comment (toggles with 'messageEditContainerSelector' to allow edit)
+    * ``originalMessageSelector`` - Selector for the original comment content for an existing comment (toggles with 'messageEditContainerSelector' to allow edit).
+    * ``deleteCommentFunction`` - The function to be called when a comment is deleted.
+    * ``post_data`` - The function to handle actions (post, edit, delete).
+    * ``preCommentLoadFunction`` - This function will be called before the comment tree is rendered.
     * ``postCommentUpdatedFunction`` - Callback function that will be executed after a comment is posted, edited, or deleted via ajax.
     * ``postCommentLoadFunction`` - Callback function that will be executed after a comment tree has been loaded via ajax.
+    * ``postCommentDeleteFunction`` - Callback function that will be executed after a comment is deleted via ajax.
     * ``rootContainerSelector`` - Selector for the comment root, which is a container that holds all comments (but NOT the highest level 'hiddenFieldsSelector' object). This is the element that emptied and appended to on each full comment tree load.
     * ``getUrl`` - URL called to load the comment tree.
     * ``postUrl`` - URL called to post/edit a comment.

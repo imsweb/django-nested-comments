@@ -1,19 +1,19 @@
 .left-comment-indent { 
-	margin-left: 40px;
-	padding-left: 15px; 
-	border-left: 1px solid black;
+    margin-left: 40px;
+    padding-left: 15px;
+    border-left: 1px solid black;
 }
 
 .comment-header {
-	border-bottom: 1px solid black;
-	padding-bottom: 5px;
-	display: table;
-	position: relative;
-	width: 100%;
+    border-bottom: 1px solid black;
+    padding-bottom: 5px;
+    display: table;
+    position: relative;
+    width: 100%;
 }
 
 .float-right {
-	float: right;
+    float: right;
 }
 
 .comment-form.non-root { margin: 5px 0 15px 0; }
@@ -22,9 +22,9 @@
 .original-message { margin-left: 5px; }
 .comment-body { margin: 10px 0 15px 0; }
 .comment-form.non-root.new-comment, .message-edit-container {
-	display: none;
+    display: none;
 }
 
 .message-edit-container {
-	padding-top: 10px;
+    padding-top: 10px;
 }

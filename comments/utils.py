@@ -1,32 +1,10 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
+from .models import Comment, CommentVersion
 
 import json
 
-class JSONField (models.TextField):
-    """
-        Temporary patch class until the minimum Django version is brought up to 1.9 (when the built in JSONField was introduced).
-    """
-    __metaclass__ = models.SubfieldBase
-
-    def to_python(self, value):
-        if value == '':
-            return None
-        if isinstance(value, basestring):
-            return json.loads(value)
-        return value
-
-    def get_prep_value(self, value):
-        if value == '':
-            return None
-        if isinstance(value, (dict, list, tuple)):
-            return json.dumps(value, cls=DjangoJSONEncoder)
-        return super(JSONField, self).get_prep_value(value)
-
-    def value_to_string(self, obj):
-        return self.get_prep_value(self._get_val_from_obj(obj))
-    
 class InvalidCommentException(Exception):
     """
     Throw this exception when a valid comment cannot be found/created based on the parameters of a request.
@@ -39,7 +17,6 @@ def _get_target_comment(request):
         This function returns the following tuple:
             (comment, version the user is editing (or None if new comment))
     """
-    from .models import Comment, CommentVersion
     # Check if the user is attempting to edit an existing comment...
     if 'version_id' in request.POST:
         try:
@@ -59,7 +36,6 @@ def _get_target_comment(request):
         raise InvalidCommentException("An error occurred while saving your comment.")
     
 def _get_or_create_tree_root(request):
-    from .models import Comment
     if 'ct_id' in request.GET and 'obj_id' in request.GET:
         try:
             parent_comment = None
