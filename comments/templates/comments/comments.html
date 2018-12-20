@@ -37,4 +37,4 @@
     {% if nodes.count == 1 and nodes.first.is_root_node %}
         {% block no_comments_message %}<p>No comments yet</p>{% endblock no_comments_message %}
     {% endif %}
-{% endblock %}
+{% endblock no_comments %}
