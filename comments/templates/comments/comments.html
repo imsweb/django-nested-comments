@@ -4,6 +4,10 @@
 {% with nodes.last as lastnode %}
     {% recursetree nodes %}
         {% get_latest_version as latest_version %}
+        {# "last-node-container" is given to a comments-node-container if it's the last node in each level of nodes. (level 1, each level 2, each level 3, etc.). #}
+        {# Note: there may be more than one level-2 group of nodes.  The class is given to the last node in each group. #}  
+        {# The if statment first check if node is the lastnode, that would be the last node in level-1. #}
+        {# If false, it checks if the node has a parent.  If so, it checks if the next node is the same as it's parents next node (basically checking if we moved up 1 level) #}
         <div class="comments-node-container {% if node == lastnode or node.parent and node.rght|add:1 == node.parent.rght %}last-node-container{% endif %} {% if node.get_children.count > 0 %}node-has-children{% endif %}" data-level="{{ node.level }}">
             {# We skip the root node because it is used as a link to the parent_object (not an actual comment) #}
             {% if not node.is_root_node %}
