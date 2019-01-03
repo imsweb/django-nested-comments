@@ -60,10 +60,10 @@ def get_template(request, comment, parent_object, tree_root, new_version, previo
 
     # Now that the version has been saved, we fire off the appropriate signal before returning the rendered template
     if previous_version:
-        if send_signal: comment_changed.send(sender=comment, request=request, version_saved=new_version, comment_action='edit', kwargs=kwargs)
+        if send_signal: comment_changed.send(sender=comment.__class__, comment=comment, request=request, version_saved=new_version, comment_action='edit', kwargs=kwargs)
         comment_template = get_attr_val(request, parent_object, 'single_comment_template', 'comments/comments.html')
     else:
-        if send_signal: comment_changed.send(sender=comment, request=request, version_saved=new_version, comment_action='post', kwargs=kwargs)
+        if send_signal: comment_changed.send(sender=comment.__class__, comment=comment, request=request, version_saved=new_version, comment_action='post', kwargs=kwargs)
         comment_template = get_attr_val(request, parent_object, 'comments_template', 'comments/comments.html')
 
     kwargs.update({
@@ -212,7 +212,7 @@ def delete_comment(request):
     try:
         # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
         kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
-        comment_changed.send(sender=comment, request=request, version_saved=None, comment_action='pre_delete', kwargs=kwargs)
+        comment_changed.send(sender=comment.__class__, comment=comment, request=request, version_saved=None, comment_action='pre_delete', kwargs=kwargs)
         
         comment.deleted = True
         comment.save()

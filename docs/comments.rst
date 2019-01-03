@@ -91,7 +91,8 @@ Signals
 =======
 
 The django-comments app fires the ``comment_changed`` signal and includes the following information:
-    * ``sender`` - the comment that was updated
+    * ``sender`` - the Comment class
+    * ``comment`` - the comment that was updated
     * ``request`` - the http request object that caused the change
     * ``comment_action`` - the action that was completed. The following values can be passed:
         1) ``edit`` - An existing comment (the sender) was edited.

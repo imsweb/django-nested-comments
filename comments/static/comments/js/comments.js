@@ -47,6 +47,9 @@
                     settings.post_data(settings.deleteUrl, dataContainer, callback);
                 }
             },
+            replyCommentFunction: function(settings, nodeContainer, commentContainer) {
+                nodeContainer.children(settings.childCommentsSelector).children(settings.commentFormSelector).toggle();
+            },
             post_data: function(url, dataContainer, callback) {
                 $.ajax({
                     type: 'POST',
@@ -146,7 +149,7 @@
                     settings.post_data(settings.postUrl, dataContainer, callback);
                     break;
                 case 'reply':
-                    nodeContainer.children(settings.childCommentsSelector).children(settings.commentFormSelector).toggle();
+                    settings.replyCommentFunction(settings, nodeContainer, commentContainer);
                     break;
                 case 'edit':
                     commentContainer.find(settings.originalMessageSelector).first().toggle();
