@@ -125,6 +125,7 @@
                     // Insert new comment directly before the comment form
                     callback.done(function(response){
                         $(commentForm).before(response.html_content);
+                        $(commentForm).toggle();
                         settings.postCommentUpdatedFunction(settings);
                     });
                     var dataContainer = commentForm.children(settings.hiddenFieldsSelector);
