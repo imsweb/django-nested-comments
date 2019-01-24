@@ -37,8 +37,8 @@
                 if(confirm(confirmationMessage)){
                     var callback = $.Deferred();
                     callback.done(function(response){
-                        settings.postCommentDeleteFunction(settings, nodeContainer);
-                        settings.postCommentUpdatedFunction(settings);
+                        settings.postCommentDeleteFunction(settings, nodeContainer, response);
+                        settings.postCommentUpdatedFunction(settings, response);
                     }).fail(function(response){
                         // TODO: Better error handling (customizable?)
                         alert("Comments could not be deleted");
@@ -72,9 +72,9 @@
                 });
             },
             preCommentLoadFunction: function(settings) {},
-            postCommentUpdatedFunction: function(settings){},
-            postCommentLoadFunction: function(settings){},
-            postCommentDeleteFunction: function(settings, nodeContainer) {$(nodeContainer).remove();},
+            postCommentUpdatedFunction: function(settings, response){},
+            postCommentLoadFunction: function(settings, response){},
+            postCommentDeleteFunction: function(settings, nodeContainer, response) {$(nodeContainer).remove();},
             rootContainerSelector: ".comments-root-container",
             
             kwargs: {},
@@ -126,7 +126,7 @@
                     callback.done(function(response){
                         $(commentForm).before(response.html_content);
                         $(commentForm).toggle();
-                        settings.postCommentUpdatedFunction(settings);
+                        settings.postCommentUpdatedFunction(settings, response);
                     });
                     var dataContainer = commentForm.children(settings.hiddenFieldsSelector);
                     settings.post_data(settings.postUrl, dataContainer, callback);
@@ -144,7 +144,7 @@
                     callback.done(function(response){
                         // Replace the comment being edited with the new version
                         commentContainer.empty().replaceWith(response.html_content);
-                        settings.postCommentUpdatedFunction(settings);
+                        settings.postCommentUpdatedFunction(settings, response);
                     });
                     var dataContainer = commentForm.children(settings.hiddenFieldsSelector);
                     settings.post_data(settings.postUrl, dataContainer, callback);
