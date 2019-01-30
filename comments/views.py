@@ -58,14 +58,6 @@ def get_template(request, comment, parent_object, tree_root, new_version, previo
     # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
     kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
 
-    # Now that the version has been saved, we fire off the appropriate signal before returning the rendered template
-    if previous_version:
-        if send_signal: comment_changed.send(sender=comment.__class__, comment=comment, request=request, version_saved=new_version, comment_action='edit', kwargs=kwargs)
-        comment_template = get_attr_val(request, parent_object, 'single_comment_template', 'comments/comments.html')
-    else:
-        if send_signal: comment_changed.send(sender=comment.__class__, comment=comment, request=request, version_saved=new_version, comment_action='post', kwargs=kwargs)
-        comment_template = get_attr_val(request, parent_object, 'comments_template', 'comments/comments.html')
-
     kwargs.update({
                    'request': request, 
                    'node': comment,
@@ -74,6 +66,14 @@ def get_template(request, comment, parent_object, tree_root, new_version, previo
                    'parent_object': parent_object,
                    'max_depth': tree_root.max_depth
                    }) 
+
+    # Now that the version has been saved, we fire off the appropriate signal before returning the rendered template
+    if previous_version:
+        if send_signal: comment_changed.send(sender=comment.__class__, comment=comment, request=request, version_saved=new_version, comment_action='edit', kwargs=kwargs)
+        comment_template = get_attr_val(request, parent_object, 'single_comment_template', 'comments/comments.html', **kwargs)
+    else:
+        if send_signal: comment_changed.send(sender=comment.__class__, comment=comment, request=request, version_saved=new_version, comment_action='post', kwargs=kwargs)
+        comment_template = get_attr_val(request, parent_object, 'comments_template', 'comments/comments.html', **kwargs)
 
     # Checks/assigns permissions to each node (so the template doesn't have to)
     _process_node_permissions(**kwargs)
@@ -260,7 +260,6 @@ def load_comments(request):
                                   .prefetch_related(Prefetch('versions', queryset=CommentVersion.objects.order_by('-date_posted')\
                                                                                                         .select_related('posting_user', 'deleted_user_info')))
     
-    comments_template = get_attr_val(request, parent_object, 'comments_template', 'comments/comments.html')
     # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
     kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
     kwargs.update({
@@ -268,7 +267,9 @@ def load_comments(request):
                    'parent_object': parent_object,
                    'max_depth': tree_root.max_depth
                    })
-    
+
+    comments_template = get_attr_val(request, parent_object, 'comments_template', 'comments/comments.html', **kwargs)
+
     # In the parent_object, sites can define a function called 'filter_nodes' if they wish to apply any additional filtering to the nodes queryset before it's rendered to the template.
     # Default value is the nodes tree with the deleted comments filtered out.
     nodes = get_attr_val(request, parent_object, "filter_nodes", default=nodes.filter(deleted=False), **kwargs)
