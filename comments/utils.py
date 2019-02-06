@@ -78,8 +78,8 @@ def _process_node_permissions(**kwargs):
         comment.can_reply = user_has_permission(request, parent_object, 'can_reply_to_comment', comment=comment) and (comment.level < max_depth)
         comment.can_edit = user_has_permission(request, parent_object, 'can_post_comment', comment=comment)
         comment.can_delete = user_has_permission(request, parent_object, 'can_delete_comment', comment=comment)
-    
-    
+
+
 def get_attr_val(request, obj, attr, default=None, **kwargs):
     """
     This function attempts to get a value from the 'obj' through 'attr' (either a callable or a variable). 

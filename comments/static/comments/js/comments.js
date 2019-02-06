@@ -125,7 +125,10 @@
                     // Insert new comment directly before the comment form
                     callback.done(function(response){
                         $(commentForm).before(response.html_content);
-                        $(commentForm).toggle();
+                        // Only hide the commentForm if the form is for a non-root (because there is no toggle button for the root Comment Form)
+                        if ($(commentForm).hasClass('non-root')) {
+                            $(commentForm).toggle();
+                        }
                         settings.postCommentUpdatedFunction(settings);
                     });
                     var dataContainer = commentForm.children(settings.hiddenFieldsSelector);

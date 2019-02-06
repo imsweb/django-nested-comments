@@ -59,7 +59,6 @@ def get_template(request, comment, parent_object, tree_root, new_version, previo
     kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
 
     kwargs.update({
-                   'request': request, 
                    'node': comment,
                    'nodes': [comment], # We need both because of _process_node_permissions and the fact that 'post' requires the full comments template
                    'latest_version': comment.versions.latest(), # We need this here because the latest version is not available inside the single comment template (used for edit)
@@ -75,6 +74,7 @@ def get_template(request, comment, parent_object, tree_root, new_version, previo
         if send_signal: comment_changed.send(sender=comment.__class__, comment=comment, request=request, version_saved=new_version, comment_action='post', kwargs=kwargs)
         comment_template = get_attr_val(request, parent_object, 'comments_template', 'comments/comments.html', **kwargs)
 
+    kwargs['request'] = request
     # Checks/assigns permissions to each node (so the template doesn't have to)
     _process_node_permissions(**kwargs)
 
