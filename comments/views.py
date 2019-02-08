@@ -109,7 +109,7 @@ def post_comment_form(request):
     
 @transaction.atomic
 @require_POST
-def post_comment(request):
+def post_comment(request, send_signal=True):
     """
     View function that handles inserting new/editing previously existing comments via Ajax
     """
@@ -170,7 +170,7 @@ def post_comment(request):
     # Everything has checked out, so we save the new version and return the appropriate response
     version_form, new_version = create_new_version(request, comment)
     if version_form.is_valid():
-        comment_template, kwargs = get_template(request, comment, parent_object, tree_root, new_version, previous_version)
+        comment_template, kwargs = get_template(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=send_signal)
         
         return JsonResponse({ 
             'ok': True,
