@@ -99,7 +99,7 @@
                     success: function(response) {
                         if (response.ok){
                             $(nodeContainer).find(settings.rootContainerSelector).empty().append(response.html_content);
-                            settings.postCommentLoadFunction(settings);
+                            settings.postCommentLoadFunction(settings, response);
                         }
                         // TODO: handle failure
                     }
