@@ -45,11 +45,12 @@ def initialize_comments(**kwargs):
 @register.simple_tag()
 def render_comments(parent_item, **kwargs):
     # TODO: Make defaults customizable (probably via settings)
+    initialize_template = get_attr_val(None, parent_item, 'initialize_template', 'comments/initialize.html', **kwargs)
     context = {
         'ct_id': ContentType.objects.get_for_model(parent_item).id,
         'obj_id': parent_item.id,
     }
-    return loader.render_to_string('comments/initialize.html', context)
+    return loader.render_to_string(initialize_template, context)
 
 @register.assignment_tag(takes_context=True)
 def get_latest_version(context):
