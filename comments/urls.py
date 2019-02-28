@@ -1,5 +1,5 @@
 from django.conf.urls import url
-import views as comment_views
+import comments.views as comment_views
 
 urlpatterns = [
     url(r'^load_comments/$', comment_views.load_comments, name='load-comments'),
