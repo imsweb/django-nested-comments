@@ -29,7 +29,7 @@ def _get_target_comment(request):
         try:
             parent = Comment.objects.get(id=request.POST.get('parent_id'))
             return Comment(parent=parent, created_by=request.user), None
-        except Comment.DoesNotExist, e:
+        except Comment.DoesNotExist as e:
             raise InvalidCommentException("The comment you are responding to could not be found.")
     # Or we can't tell what they were trying to do, so we return a 404
     else:
@@ -62,7 +62,7 @@ def _get_or_create_tree_root(request):
                 Comment.objects.rebuild()
                 
             return comment, obj
-        except Exception, e:
+        except Exception as e:
             raise InvalidCommentException("Unable to access comment tree: parent object not found.")
     else:
         raise InvalidCommentException("Unable to access comment tree: invalid request parameters.")

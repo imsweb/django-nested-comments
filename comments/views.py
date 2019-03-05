@@ -86,7 +86,7 @@ def post_comment_form(request):
     """
     try:
         comment, previous_version = get_comment(request)
-    except InvalidCommentException, e:
+    except InvalidCommentException as e:
         raise
     
     parent_comment = comment.parent
@@ -116,7 +116,7 @@ def post_comment(request, send_signal=True):
     # Based on variables passed in we get the comment the user is attempting to create/edit
     try:
         comment, previous_version = get_comment(request)
-    except InvalidCommentException, e:
+    except InvalidCommentException as e:
         transaction.rollback()
         return JsonResponse({ 
             'ok': False,
@@ -189,7 +189,7 @@ def delete_comment(request):
     # Based on variables passed in we get the comment the user is attempting to create/edit
     try:
         comment, previous_version = _get_target_comment(request)
-    except InvalidCommentException, e:
+    except InvalidCommentException as e:
         transaction.set_rollback(True)
         return JsonResponse({ 
             'ok': False,
@@ -223,7 +223,7 @@ def delete_comment(request):
         return JsonResponse({ 
             'ok': True,
         })
-    except Exception, e:
+    except Exception as e:
         # TODO: Handle this more eloquently? Log? Probably best not to pass back raw error.
         transaction.set_rollback(True)
         return JsonResponse({ 
@@ -242,7 +242,7 @@ def load_comments(request):
     # First we get the root of the comment tree being requested
     try:
         tree_root, parent_object = _get_or_create_tree_root(request)
-    except InvalidCommentException, e:
+    except InvalidCommentException as e:
         return JsonResponse({ 
             'ok': False,
             'error_message': e.message,
