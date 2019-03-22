@@ -28,6 +28,7 @@
             messageEditContainerSelector: ".message-edit-container",
             nodeContainerSelector: ".comments-node-container",
             originalMessageSelector: ".original-message",
+            originalMessageExtraSelector: ".original-message-extra",
             deleteCommentFunction: function(settings, nodeContainer, commentContainer) {
                 var confirmationMessage = 'Are you sure you want to delete this comment?';
                 var hasChildren = nodeContainer.children(settings.childCommentsSelector).children(settings.nodeContainerSelector).length > 0;
@@ -51,10 +52,12 @@
                 nodeContainer.children(settings.childCommentsSelector).children(settings.commentFormSelector).toggle();
             },
             post_data: function(url, dataContainer, callback) {
+            	var dataContainerData = $(dataContainer).find(':input').serializeArray();
+            	var extraData = $(this).prop('getExtraDataForPost')(dataContainer.closest($(this).prop('commentFormSelector')));
                 $.ajax({
                     type: 'POST',
                     url: url,
-                    data: $(dataContainer).find(':input').serialize(),
+                    data: $.param($.merge(dataContainerData, extraData)),
                     settings: settings,
                     beforeSend: function(xhr) {
                         if (!this.crossDomain) {
@@ -75,6 +78,7 @@
             postCommentUpdatedFunction: function(settings, response){},
             postCommentLoadFunction: function(settings, response){},
             postCommentDeleteFunction: function(settings, nodeContainer, response) {$(nodeContainer).remove();},
+            getExtraDataForPost: function(commentFormContainer){return ''},
             rootContainerSelector: ".comments-root-container",
             
             kwargs: {},
@@ -157,6 +161,7 @@
                     break;
                 case 'edit':
                     commentContainer.find(settings.originalMessageSelector).first().toggle();
+                    commentContainer.find(settings.originalMessageExtraSelector).toggle();
                     commentContainer.find(settings.messageEditContainerSelector).first().toggle();
                     break;
                 case 'delete':
