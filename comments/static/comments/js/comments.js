@@ -78,7 +78,8 @@
             postCommentUpdatedFunction: function(settings, response){},
             postCommentLoadFunction: function(settings, response){},
             postCommentDeleteFunction: function(settings, nodeContainer, response) {$(nodeContainer).remove();},
-            getExtraDataForPost: function(commentFormContainer){return ''},
+            getExtraDataForPost: function(commentFormContainer){return '';},
+            commentPostFailExtraCallbacks: function(settings) {return [];},
             rootContainerSelector: ".comments-root-container",
             
             kwargs: {},
@@ -125,7 +126,6 @@
                     message_holder.val('');
 
                     var callback = $.Deferred();
-                    // TODO: Better error handling (customizable?)
                     // Insert new comment directly before the comment form
                     callback.done(function(response){
                         $(commentForm).before(response.html_content);
@@ -135,6 +135,11 @@
                         }
                         settings.postCommentUpdatedFunction(settings, response);
                     });
+                    var failCallbacks = [function(settings) {
+                    	// reset comment msg back
+                    	message_holder.val(commentForm.find('input[name=message]').val());
+                    }];
+                	callback.fail(failCallbacks.concat(settings.commentPostFailExtraCallbacks(settings)));
                     var dataContainer = commentForm.children(settings.hiddenFieldsSelector);
                     settings.post_data(settings.postUrl, dataContainer, callback);
                     break;
@@ -147,12 +152,16 @@
                     message_holder.val('');
 
                     var callback = $.Deferred();
-                    // TODO: Better error handling (customizable?)
                     callback.done(function(response){
                         // Replace the comment being edited with the new version
                         commentContainer.empty().replaceWith(response.html_content);
                         settings.postCommentUpdatedFunction(settings, response);
                     });
+                    var failCallbacks = [function(settings) {
+                    	// reset comment msg back
+                    	message_holder.val(commentForm.find('input[name=message]').val());
+                    }];
+                	callback.fail(failCallbacks.concat(settings.commentPostFailExtraCallbacks(settings)));
                     var dataContainer = commentForm.children(settings.hiddenFieldsSelector);
                     settings.post_data(settings.postUrl, dataContainer, callback);
                     break;
