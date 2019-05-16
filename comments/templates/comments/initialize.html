@@ -1,8 +1,12 @@
-<div class="comments-node-container comments-wrapper">
-    <div class="comment-hidden-fields">
-        <input type="hidden" name="ct_id" value="{{ ct_id }}">
-        <input type="hidden" name="obj_id" value="{{ obj_id }}">
+{% block initialize-comments %}
+    <div class="comments-node-container comments-wrapper">
+        {% block comment-tree %}
+            <div class="comment-hidden-fields">
+                <input type="hidden" name="ct_id" value="{{ ct_id }}">
+                <input type="hidden" name="obj_id" value="{{ obj_id }}">
+            </div>
+            <div class="comments-root-container">
+            </div>
+        {% endblock comment-tree %}
     </div>
-    <div class="comments-root-container">
-    </div>
-</div>
+{% endblock initialize-comments %}

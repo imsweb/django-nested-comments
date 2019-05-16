@@ -28,8 +28,10 @@
                             </div>
                             <div class="comment-visible-fields">
                                 <textarea class="{% block post_textarea_class %}{% endblock post_textarea_class %}" name="message_holder"></textarea>
-                                <button type="button" class="action-trigger" data-action="post-new">{% if node.is_root_node %}Submit New Comment{% else %}Submit Response{% endif %}</button>
-                                {% block extra_buttons %}{% endblock extra_buttons %}
+                                {% block new-comment-buttons %}
+	                                <button type="button" class="action-trigger" data-action="post-new">{% if node.is_root_node %}Submit New Comment{% else %}Submit Response{% endif %}</button>
+	                                {% block extra_buttons %}{% endblock extra_buttons %}
+                                {% endblock new-comment-buttons %}
                             </div>
                         </div>
                     {% endblock %}

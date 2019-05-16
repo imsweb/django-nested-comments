@@ -84,7 +84,7 @@
             },
             preCommentLoadFunction: function(settings) {},
             postCommentUpdatedFunction: function(settings, response){},
-            postCommentLoadFunction: function(settings, response){},
+            postCommentLoadFunction: function(settings, response, nodeContainer){},
             postCommentDeleteFunction: function(settings, nodeContainer, response) {$(nodeContainer).remove();},
             getExtraDataForPost: function(commentFormContainer){return '';},
             commentPostFailExtraCallbacks: function(settings) {return [];},
@@ -107,12 +107,12 @@
                         settings.preCommentLoadFunction(settings);
                         xhr.setRequestHeader('X-KWARGS', JSON.stringify(settings.kwargs));
                     },
-                    data: $(nodeContainer).children(settings.hiddenFieldsSelector).find(':input').serialize(),
+                    data: $(nodeContainer).find(settings.hiddenFieldsSelector).find(':input').serialize(),
                     settings: settings,
                     success: function(response) {
                         if (response.ok){
                             $(nodeContainer).find(settings.rootContainerSelector).empty().append(response.html_content);
-                            settings.postCommentLoadFunction(settings, response);
+                            settings.postCommentLoadFunction(settings, response, nodeContainer);
                         }
                         // TODO: handle failure
                     }
