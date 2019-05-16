@@ -35,12 +35,14 @@ def is_past_max_depth(comment):
 def add_comment(comment):
     # TODO: Add the ability to override "position" (default is 'last-child')
     parent_comment = comment.parent
+
+    # We lock the parent comment to revent a race condition when adding new comments
+    lock_comment(parent_comment, False)
+
     return Comment.objects.insert_node(comment, parent_comment, save=True)
 
-def lock_comment(comment, comment_id=None, nowait=True):
-    if not comment_id:
-        comment_id = comment.pk
-    Comment.objects.select_for_update(nowait=nowait).get(pk=comment_id)
+def lock_comment(comment, nowait=True):
+    Comment.objects.select_for_update(nowait=nowait).get(pk=comment.pk)
     
 def not_most_recent_version(comment, previous_version):
     return previous_version and previous_version != comment.versions.latest()
@@ -100,9 +102,6 @@ def post_comment_form(request):
     if is_past_max_depth(comment):
         raise Exception("Max depth reached")
 
-    # We lock the parent comment to revent a race condition when adding new comments
-    lock_comment(comment, comment.parent_id, False)
-
     # If the comment object (NOT the message) hasn't been saved yet...
     if comment._state.adding == True:
        comment = add_comment(comment)
@@ -148,9 +147,6 @@ def post_comment(request, send_signal=True):
             'ok': False,
             'error_message': "You cannot respond to this comment.",
         })
-
-    # We lock the parent comment to revent a race condition when adding new comments
-    lock_comment(comment, comment.parent_id, False)
 
     # If the comment object (NOT the message) hasn't been saved yet...
     if comment._state.adding == True:
