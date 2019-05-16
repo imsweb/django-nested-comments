@@ -37,8 +37,10 @@ def add_comment(comment):
     parent_comment = comment.parent
     return Comment.objects.insert_node(comment, parent_comment, save=True)
 
-def lock_comment(comment):
-    Comment.objects.select_for_update(nowait=True).get(pk=comment.pk)
+def lock_comment(comment, comment_id=None, nowait=True):
+    if not comment_id:
+        comment_id = comment.pk
+    Comment.objects.select_for_update(nowait=nowait).get(pk=comment_id)
     
 def not_most_recent_version(comment, previous_version):
     return previous_version and previous_version != comment.versions.latest()
@@ -97,7 +99,10 @@ def post_comment_form(request):
     
     if is_past_max_depth(comment):
         raise Exception("Max depth reached")
-    
+
+    # We lock the parent comment to revent a race condition when adding new comments
+    lock_comment(comment, comment.parent_id, False)
+
     # If the comment object (NOT the message) hasn't been saved yet...
     if comment._state.adding == True:
        comment = add_comment(comment)
@@ -143,7 +148,10 @@ def post_comment(request, send_signal=True):
             'ok': False,
             'error_message': "You cannot respond to this comment.",
         })
-    
+
+    # We lock the parent comment to revent a race condition when adding new comments
+    lock_comment(comment, comment.parent_id, False)
+
     # If the comment object (NOT the message) hasn't been saved yet...
     if comment._state.adding == True:
        comment = add_comment(comment)
@@ -254,8 +262,6 @@ def load_comments(request):
             'ok': False,
             'error_message': "You do not have permission to view comments for this object.",
         })
-
-    Comment.objects.partial_rebuild(tree_root.tree_id)
 
     # Once we have our desired nodes, we tack on all of the select/prefetch related stuff
     nodes = tree_root.get_family().select_related('deleted_user_info', 'created_by', 'parent', 'content_type')\
