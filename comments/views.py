@@ -36,7 +36,7 @@ def add_comment(comment):
     # TODO: Add the ability to override "position" (default is 'last-child')
     parent_comment = comment.parent
 
-    # We lock the parent comment to revent a race condition when adding new comments
+    # We lock the parent comment to prevent a race condition when adding new comments
     lock_comment(parent_comment, False)
 
     return Comment.objects.insert_node(comment, parent_comment, save=True)
