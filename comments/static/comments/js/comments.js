@@ -28,6 +28,7 @@
             messageEditContainerSelector: ".message-edit-container",
             nodeContainerSelector: ".comments-node-container",
             originalMessageSelector: ".original-message",
+            originalMessageExtraSelector: ".original-message-extra",
             deleteCommentFunction: function(settings, nodeContainer, commentContainer) {
                 var confirmationMessage = 'Are you sure you want to delete this comment?';
                 var hasChildren = nodeContainer.children(settings.childCommentsSelector).children(settings.nodeContainerSelector).length > 0;
@@ -40,21 +41,31 @@
                         settings.postCommentDeleteFunction(settings, nodeContainer, response);
                         settings.postCommentUpdatedFunction(settings, response);
                     }).fail(function(response){
-                        // TODO: Better error handling (customizable?)
-                        alert("Comments could not be deleted");
+                    	settings.handlePostError(settings, response);
                     });
-                    var dataContainer = commentContainer.find(settings.hiddenFieldsSelector);
-                    settings.post_data(settings.deleteUrl, dataContainer, callback);
+                    settings.post_data(settings.deleteUrl, settings.getData(settings, commentContainer), callback);
                 }
             },
             replyCommentFunction: function(settings, nodeContainer, commentContainer) {
                 nodeContainer.children(settings.childCommentsSelector).children(settings.commentFormSelector).toggle();
             },
-            post_data: function(url, dataContainer, callback) {
+            getData: function(settings, commentContainer) {
+            	var dataContainer = commentContainer.find(settings.hiddenFieldsSelector);
+            	return $(dataContainer).find(':input').serializeArray();
+            },
+            handlePostError: function(settings, response) {
+            	// override as needed for better error handling
+            	if (response.error_message) {
+            		alert(response.error_message);
+            	}
+            	else 
+            		alert('An error occurred with your submission. Please try again.');
+            },
+            post_data: function(url, data, callback) {
                 $.ajax({
                     type: 'POST',
                     url: url,
-                    data: $(dataContainer).find(':input').serialize(),
+                    data: $.param(data),
                     settings: settings,
                     beforeSend: function(xhr) {
                         if (!this.crossDomain) {
@@ -75,6 +86,8 @@
             postCommentUpdatedFunction: function(settings, response){},
             postCommentLoadFunction: function(settings, response, nodeContainer){},
             postCommentDeleteFunction: function(settings, nodeContainer, response) {$(nodeContainer).remove();},
+            getExtraDataForPost: function(commentFormContainer){return '';},
+            commentPostFailExtraCallbacks: function(settings) {return [];},
             rootContainerSelector: ".comments-root-container",
             
             kwargs: {},
@@ -121,7 +134,6 @@
                     message_holder.val('');
 
                     var callback = $.Deferred();
-                    // TODO: Better error handling (customizable?)
                     // Insert new comment directly before the comment form
                     callback.done(function(response){
                         $(commentForm).before(response.html_content);
@@ -131,8 +143,12 @@
                         }
                         settings.postCommentUpdatedFunction(settings, response);
                     });
-                    var dataContainer = commentForm.children(settings.hiddenFieldsSelector);
-                    settings.post_data(settings.postUrl, dataContainer, callback);
+                	callback.fail(function(response) {
+                    	// reset comment msg back
+                    	message_holder.val(commentForm.find('input[name=message]').val());
+                    	settings.handlePostError(settings, response);
+                	});
+                    settings.post_data(settings.postUrl, settings.getData(settings, commentForm), callback);
                     break;
                 case 'post-edit':
                     var commentForm = $(this).closest(settings.commentFormSelector);
@@ -143,20 +159,24 @@
                     message_holder.val('');
 
                     var callback = $.Deferred();
-                    // TODO: Better error handling (customizable?)
                     callback.done(function(response){
                         // Replace the comment being edited with the new version
                         commentContainer.empty().replaceWith(response.html_content);
                         settings.postCommentUpdatedFunction(settings, response);
                     });
-                    var dataContainer = commentForm.children(settings.hiddenFieldsSelector);
-                    settings.post_data(settings.postUrl, dataContainer, callback);
+                	callback.fail(function(response) {
+                    	// reset comment msg back
+                    	message_holder.val(commentForm.find('input[name=message]').val());
+                    	settings.handlePostError(settings, response);
+                	});
+                    settings.post_data(settings.postUrl, settings.getData(settings, commentForm), callback);
                     break;
                 case 'reply':
                     settings.replyCommentFunction(settings, nodeContainer, commentContainer);
                     break;
                 case 'edit':
                     commentContainer.find(settings.originalMessageSelector).first().toggle();
+                    commentContainer.find(settings.originalMessageExtraSelector).toggle();
                     commentContainer.find(settings.messageEditContainerSelector).first().toggle();
                     break;
                 case 'delete':
