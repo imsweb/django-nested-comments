@@ -247,14 +247,16 @@ def load_comments(request):
             'ok': False,
             'error_message': e.message,
         })
-        
+
     # Check if the user doesn't pass the appropriate permission check (on the parent_object)...
     if not user_has_permission(request, parent_object, 'can_view_comments'):
         return JsonResponse({ 
             'ok': False,
             'error_message': "You do not have permission to view comments for this object.",
         })
-        
+
+    Comment.objects.partial_rebuild(tree_root.tree_id)
+
     # Once we have our desired nodes, we tack on all of the select/prefetch related stuff
     nodes = tree_root.get_family().select_related('deleted_user_info', 'created_by', 'parent', 'content_type')\
                                   .prefetch_related(Prefetch('versions', queryset=CommentVersion.objects.order_by('-date_posted')\
@@ -277,7 +279,7 @@ def load_comments(request):
     
     # Checks/assigns permissions to each node (so the template doesn't have to)
     _process_node_permissions(**kwargs)
-    
+
     return JsonResponse({ 
         'ok': True,
         'html_content': loader.render_to_string(comments_template, context=kwargs, request=request),
