@@ -29,7 +29,7 @@ def user_can_post_comment(request, comment):
 def is_past_max_depth(comment):
     parent_comment = comment.parent
     tree_root = parent_comment.get_root()
-    
+
     return parent_comment.level >= tree_root.max_depth
 
 def add_comment(comment):
@@ -43,7 +43,7 @@ def add_comment(comment):
 
 def lock_comment(comment, nowait=True):
     Comment.objects.select_for_update(nowait=nowait).get(pk=comment.pk)
-    
+
 def not_most_recent_version(comment, previous_version):
     return previous_version and previous_version != comment.versions.latest()
 
@@ -68,7 +68,7 @@ def get_template(request, comment, parent_object, tree_root, new_version, previo
                    'latest_version': comment.versions.latest(), # We need this here because the latest version is not available inside the single comment template (used for edit)
                    'parent_object': parent_object,
                    'max_depth': tree_root.max_depth
-                   }) 
+                   })
 
     # Now that the version has been saved, we fire off the appropriate signal before returning the rendered template
     if previous_version:
@@ -92,25 +92,25 @@ def post_comment_form(request):
         comment, previous_version = get_comment(request)
     except InvalidCommentException as e:
         raise
-    
+
     parent_comment = comment.parent
     tree_root = parent_comment.get_root()
     parent_object = tree_root.content_object
     if not user_can_post_comment(request, comment):
         raise Exception("User can't create comments")
-    
+
     if is_past_max_depth(comment):
         raise Exception("Max depth reached")
 
     # If the comment object (NOT the message) hasn't been saved yet...
     if comment._state.adding == True:
        comment = add_comment(comment)
-       
+
     # Everything has checked out, so we save the new version and return the appropriate response
     version_form, new_version = create_new_version(request, comment)
-    
+
     return comment
-    
+
 @transaction.atomic
 @require_POST
 def post_comment(request, send_signal=True):
@@ -122,11 +122,11 @@ def post_comment(request, send_signal=True):
         comment, previous_version = get_comment(request)
     except InvalidCommentException as e:
         transaction.rollback()
-        return JsonResponse({ 
+        return JsonResponse({
             'ok': False,
-            'error_message': e.message,
+            'error_message': str(e),
         })
-    
+
     # Check if the user doesn't pass the appropriate permission check (on the parent_object)...
     # We call this on the parent comment because the comment itself may not have been saved yet (can't call .get_root on it)
     # TODO: Fix this for root comment? (no parent)
@@ -135,15 +135,15 @@ def post_comment(request, send_signal=True):
     parent_object = tree_root.content_object
     if not user_can_post_comment(request, comment):
         transaction.set_rollback(True)
-        return JsonResponse({ 
+        return JsonResponse({
             'ok': False,
             'error_message': "You do not have permission to post this comment.",
         })
-     
-    # Check to make sure we are not trying to save a comment "deeper" than we are allowed...   
+
+    # Check to make sure we are not trying to save a comment "deeper" than we are allowed...
     if is_past_max_depth(comment):
         transaction.set_rollback(True)
-        return JsonResponse({ 
+        return JsonResponse({
             'ok': False,
             'error_message': "You cannot respond to this comment.",
         })
@@ -151,42 +151,42 @@ def post_comment(request, send_signal=True):
     # If the comment object (NOT the message) hasn't been saved yet...
     if comment._state.adding == True:
        comment = add_comment(comment)
-    
+
     # Now that we have a comment object, we get a 'lock' on it to prevent a race condition
     try:
         lock_comment(comment)
     except DatabaseError:
         transaction.set_rollback(True)
         # Someone is already trying to update this comment, so we need to return an appropriate error
-        return JsonResponse({ 
+        return JsonResponse({
             'ok': False,
             'error_message': "Someone else is currently editing this comment. Please refresh your page and try again.",
         })
-    
+
     # Now we know we have sole access to the comment object at the moment so we need to check if we are editing the most recent version
     if not_most_recent_version(comment, previous_version):
         transaction.set_rollback(True)
-        return JsonResponse({ 
+        return JsonResponse({
             'ok': False,
             'error_message': "You are not editing the most recent version of this comment. Please refresh your page and try again.",
         })
-    
+
     # Everything has checked out, so we save the new version and return the appropriate response
     version_form, new_version = create_new_version(request, comment)
     if version_form.is_valid():
         comment_template, kwargs = get_template(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=send_signal)
-        
-        return JsonResponse({ 
+
+        return JsonResponse({
             'ok': True,
             'html_content': loader.render_to_string(comment_template, context=kwargs)
         })
     else:
         transaction.set_rollback(True)
-        return JsonResponse({ 
+        return JsonResponse({
             'ok': False,
             'error_message': "There were errors in your submission. Please correct them and resubmit.",
         })
-        
+
 @transaction.atomic
 @require_POST
 def delete_comment(request):
@@ -195,11 +195,11 @@ def delete_comment(request):
         comment, previous_version = _get_target_comment(request)
     except InvalidCommentException as e:
         transaction.set_rollback(True)
-        return JsonResponse({ 
+        return JsonResponse({
             'ok': False,
-            'error_message': e.message,
+            'error_message': str(e),
         })
-    
+
     # Check if the user doesn't pass the appropriate permission check (on the parent_object)...
     # We call this on the parent comment because the comment itself may not have been saved yet (can't call .get_root on it)
     # TODO: Fix this for root comment? (no parent)
@@ -208,29 +208,29 @@ def delete_comment(request):
     parent_object = tree_root.content_object
     if not user_has_permission(request, parent_object, 'can_delete_comment', comment=comment):
         transaction.set_rollback(True)
-        return JsonResponse({ 
+        return JsonResponse({
             'ok': False,
             'error_message': "You do not have permission to post this comment.",
         })
-    
+
     try:
         # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
         kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
         comment_changed.send(sender=comment.__class__, comment=comment, request=request, version_saved=None, comment_action='pre_delete', kwargs=kwargs)
-        
+
         comment.deleted = True
         comment.save()
         for child in comment.get_children():
             child.deleted = True
             child.save()
-        
-        return JsonResponse({ 
+
+        return JsonResponse({
             'ok': True,
         })
     except Exception as e:
         # TODO: Handle this more eloquently? Log? Probably best not to pass back raw error.
         transaction.set_rollback(True)
-        return JsonResponse({ 
+        return JsonResponse({
             'ok': False,
             'error_message': 'There was an error deleting the selected comment(s).',
         })
@@ -247,14 +247,14 @@ def load_comments(request):
     try:
         tree_root, parent_object = _get_or_create_tree_root(request)
     except InvalidCommentException as e:
-        return JsonResponse({ 
+        return JsonResponse({
             'ok': False,
-            'error_message': e.message,
+            'error_message': str(e),
         })
 
     # Check if the user doesn't pass the appropriate permission check (on the parent_object)...
     if not user_has_permission(request, parent_object, 'can_view_comments'):
-        return JsonResponse({ 
+        return JsonResponse({
             'ok': False,
             'error_message': "You do not have permission to view comments for this object.",
         })
@@ -263,7 +263,7 @@ def load_comments(request):
     nodes = tree_root.get_family().select_related('deleted_user_info', 'created_by', 'parent', 'content_type')\
                                   .prefetch_related(Prefetch('versions', queryset=CommentVersion.objects.order_by('-date_posted')\
                                                                                                         .select_related('posting_user', 'deleted_user_info')))
-    
+
     # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
     kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
     kwargs.update({
@@ -278,11 +278,11 @@ def load_comments(request):
     # Default value is the nodes tree with the deleted comments filtered out.
     nodes = get_attr_val(request, parent_object, "filter_nodes", default=nodes.filter(deleted=False), **kwargs)
     kwargs.update({"nodes": nodes, 'request': request})
-    
+
     # Checks/assigns permissions to each node (so the template doesn't have to)
     _process_node_permissions(**kwargs)
 
-    return JsonResponse({ 
+    return JsonResponse({
         'ok': True,
         'html_content': loader.render_to_string(comments_template, context=kwargs, request=request),
         'number_of_comments': tree_root.get_descendant_count()
