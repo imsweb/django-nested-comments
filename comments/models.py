@@ -67,7 +67,7 @@ def store_deleted_user(sender, **kwargs):
     instance = kwargs.get('instance', None)
     if instance:
         # TODO: Make this more generic? There is no guarantee that these values are applicable since we are using AUTH_USER_MODEL
-        user_info = DeletedUserInfo.objects.get_or_create(first_name=getattr(instance, first_name, ''), last_name=getattr(instance, last_name, ''), email=getattr(instance, email, ''))[0]
+        user_info = DeletedUserInfo.objects.get_or_create(first_name=getattr(instance, 'first_name', ''), last_name=getattr(instance, 'last_name', ''), email=getattr(instance, 'email', ''))[0]
         for comment in Comment.objects.filter(created_by=instance):
             comment.deleted_user_info = user_info
             comment.save()
