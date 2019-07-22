@@ -7,7 +7,7 @@ setup(
     description='A Django application for handling comment uploads and associating them to arbitrary models.',
     author='Noah Lefcourt',
     author_email='lefcourn@imsweb.com',
-    url='http://imsweb.com',
+    url='https://github.com/imsweb/django-nested-comments',
     license='BSD',
     packages=find_packages(),
     include_package_data=True,
