@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import comments
 
 setup(
-    name='comments',
+    name='django-nested-comments',
     version=comments.__version__,
     description='A Django application for handling comment uploads and associating them to arbitrary models.',
     author='Noah Lefcourt',
