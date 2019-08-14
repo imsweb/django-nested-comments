@@ -24,18 +24,26 @@ def create_comment_without_request(obj, user, message):
     if not obj.can_post_comment(comment=comment, user=user):
         raise Exception("User can't create comments")
 
-    Comment.objects.insert_node(comment, comment.parent, save=True)
+    with transaction.atomic():
+        comment = add_comment(comment)
+    create_new_version_without_request(comment, message, user)
 
-    version_form = CommentVersionForm( {'message':message, 'comment':comment, 'posting_user':user})
+    return comment
+
+def create_new_version_without_request(comment, message, user):
+    return new_version(comment, user, {'message':message, 'comment':comment, 'posting_user':user})
+
+def new_version(comment, user, form_arguements):
+    version_form = CommentVersionForm(form_arguements)
     new_version = None
-
     if version_form.is_valid():
         new_version = version_form.save(commit=False)
         new_version.comment = comment
         new_version.posting_user = user
         new_version.save()
 
-    return comment
+    return version_form, new_version
+    
 
 def get_comment(request):
     comment, previous_version = _get_target_comment(request)
@@ -69,15 +77,7 @@ def not_most_recent_version(comment, previous_version):
     return previous_version and previous_version != comment.versions.latest()
 
 def create_new_version(request, comment):
-    version_form = CommentVersionForm(request.POST)
-    new_version = None
-    if version_form.is_valid():
-        new_version = version_form.save(commit=False)
-        new_version.comment = comment
-        new_version.posting_user = request.user
-        new_version.save()
-
-    return version_form, new_version
+    return new_version(comment, request.user, request.POST)
 
 def get_template(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=True):
     # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
