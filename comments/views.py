@@ -17,8 +17,10 @@ from .utils import InvalidCommentException, _get_target_comment, _get_or_create_
 import json
 
 def create_comment_without_request(obj, user, message):
-    """This is intended for use with cron jobs. This creates a comment without using a request.
-    This is only for creating a comment, not for replying or editing a comment """
+    """
+    This is intended for use with cron jobs. This creates a comment without using a request.
+    This is only for creating a comment, not for replying or editing a comment.
+    """
     comment = Comment(parent=Comment.objects.get(object_id=obj.pk), created_by=user)
 
     if not obj.can_post_comment(comment=comment, user=user):
