@@ -21,22 +21,29 @@ def create_comment_without_request(obj, user, message):
     This is intended for use with cron jobs. This creates a comment without using a request.
     This is only for creating a comment, not for replying or editing a comment.
     """
+
     comment = Comment(parent=Comment.objects.get(object_id=obj.pk), created_by=user)
 
     if not obj.can_post_comment(comment=comment, user=user):
         raise Exception("User can't create comments")
 
+    # select_for_update in add_comment must be wrapped in an atomic transaction.
     with transaction.atomic():
         comment = add_comment(comment)
+
+    # Create a new/original version of the comment.
     create_new_version_without_request(comment, message, user)
 
     return comment
 
 def create_new_version_without_request(comment, message, user):
+    """
+    Calls new_version with the parameters to create a version without a request object. 
+    """
     return new_version(comment, user, {'message':message, 'comment':comment, 'posting_user':user})
 
-def new_version(comment, user, form_arguements):
-    version_form = CommentVersionForm(form_arguements)
+def new_version(comment, user, form_data_to_bind):
+    version_form = CommentVersionForm(form_data_to_bind)
     new_version = None
     if version_form.is_valid():
         new_version = version_form.save(commit=False)
