@@ -103,6 +103,7 @@
                 // TODO: Check for load_initial and skip if 0 (save us a hit on the server)
                 $.ajax({
                     url: settings.getUrl,
+                    cache: false,
                     beforeSend: function(xhr) {
                         settings.preCommentLoadFunction(settings);
                         xhr.setRequestHeader('X-KWARGS', JSON.stringify(settings.kwargs));
