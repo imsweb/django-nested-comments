@@ -49,6 +49,11 @@
             replyCommentFunction: function(settings, nodeContainer, commentContainer) {
                 nodeContainer.children(settings.childCommentsSelector).children(settings.commentFormSelector).toggle();
             },
+            editCommentFunction: function(settings, nodeContainer, commentContainer) {
+                commentContainer.find(settings.originalMessageSelector).first().toggle();
+                commentContainer.find(settings.originalMessageExtraSelector).toggle();
+                commentContainer.find(settings.messageEditContainerSelector).first().toggle();
+            },
             getData: function(settings, commentContainer) {
             	var dataContainer = commentContainer.find(settings.hiddenFieldsSelector);
             	return $(dataContainer).find(':input').serializeArray();
@@ -176,9 +181,7 @@
                     settings.replyCommentFunction(settings, nodeContainer, commentContainer);
                     break;
                 case 'edit':
-                    commentContainer.find(settings.originalMessageSelector).first().toggle();
-                    commentContainer.find(settings.originalMessageExtraSelector).toggle();
-                    commentContainer.find(settings.messageEditContainerSelector).first().toggle();
+                    settings.editCommentFunction(settings, nodeContainer, commentContainer);
                     break;
                 case 'delete':
                     settings.deleteCommentFunction(settings, nodeContainer, commentContainer);

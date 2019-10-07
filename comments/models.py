@@ -23,7 +23,7 @@ class Comment (MPTTModel):
     NOTE: The root object (the one with a content_object and no parent) is NOT a real comment, but allows for associating to any object.
     """
     
-    parent = TreeForeignKey('self', null=True, blank=True, db_index=True)
+    parent = TreeForeignKey('self', null=True, blank=True, db_index=True, on_delete=models.CASCADE)
     """ The parent comment, NULL if this is the root "comment" """
     
     date_created = models.DateTimeField(default=timezone.now, editable=False)
