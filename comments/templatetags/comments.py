@@ -1,6 +1,6 @@
 from django import template
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.template import loader
 from django.template.loader import render_to_string
 
@@ -60,7 +60,7 @@ def render_comments(parent_item, **kwargs):
     }
     return loader.render_to_string(initialize_template, context)
 
-@register.assignment_tag(takes_context=True)
+@register.simple_tag(takes_context=True)
 def get_latest_version(context):
     # Since the versions were already ordered in the prefetch we just get the first one
     if context['node'].versions.count():

@@ -99,5 +99,5 @@ def user_has_permission(request, parent_object, permission_function, **kwargs):
     """
         Helper method that defaults all permission checks to "is_authenticated" if it is not defined on the parent_object.
     """
-    default = request.user.is_authenticated()
+    default = request.user.is_authenticated
     return get_attr_val(request, parent_object, permission_function, default, **kwargs)

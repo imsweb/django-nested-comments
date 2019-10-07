@@ -27,9 +27,9 @@ class Migration(migrations.Migration):
                 ('rght', models.PositiveIntegerField(editable=False, db_index=True)),
                 ('tree_id', models.PositiveIntegerField(editable=False, db_index=True)),
                 ('level', models.PositiveIntegerField(editable=False, db_index=True)),
-                ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True)),
-                ('created_by', models.ForeignKey(related_name='comments', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-                ('parent', mptt.fields.TreeForeignKey(blank=True, to='comments.Comment', null=True)),
+                ('content_type', models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True, on_delete=models.CASCADE)),
+                ('created_by', models.ForeignKey(related_name='comments', blank=True, to=settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE)),
+                ('parent', mptt.fields.TreeForeignKey(blank=True, to='comments.Comment', null=True, on_delete=models.CASCADE)),
             ],
             options={
                 'abstract': False,
@@ -41,8 +41,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('message', models.TextField()),
                 ('date_posted', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
-                ('comment', models.ForeignKey(related_name='versions', to='comments.Comment')),
-                ('posting_user', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('comment', models.ForeignKey(related_name='versions', to='comments.Comment', on_delete=models.CASCADE)),
+                ('posting_user', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True, on_delete=models.CASCADE)),
             ],
             options={
                 'get_latest_by': 'date_posted',
