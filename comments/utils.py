@@ -91,6 +91,7 @@ def get_attr_val(request, obj, attr, default=None, **kwargs):
         attr_holder = getattr(obj, attr)
         if callable(attr_holder):
             kwargs['request'] = kwargs.get('request', request)
+            kwargs['user'] = kwargs.get('user', request.user)
             return attr_holder(**kwargs)
         return attr_holder
     return default
