@@ -33,7 +33,7 @@
                 var confirmationMessage = 'Are you sure you want to delete this comment?';
                 var hasChildren = nodeContainer.children(settings.childCommentsSelector).children(settings.nodeContainerSelector).length > 0;
                 if (hasChildren) {
-                    confirmationMessage += " NOTE: Deleting this comment will remove ALL RESPONSES to this comment as well."
+                    confirmationMessage += " NOTE: Deleting this comment will remove ALL RESPONSES to this comment as well.";
                 }
                 if(confirm(confirmationMessage)){
                     var callback = $.Deferred();
@@ -41,7 +41,7 @@
                         settings.postCommentDeleteFunction(settings, nodeContainer, response);
                         settings.postCommentUpdatedFunction(settings, response);
                     }).fail(function(response){
-                    	settings.handlePostError(settings, response);
+                        settings.handlePostError(settings, response);
                     });
                     settings.post_data(settings.deleteUrl, settings.getData(settings, commentContainer), callback);
                 }
@@ -55,16 +55,16 @@
                 commentContainer.find(settings.messageEditContainerSelector).first().toggle();
             },
             getData: function(settings, commentContainer) {
-            	var dataContainer = commentContainer.find(settings.hiddenFieldsSelector);
-            	return $(dataContainer).find(':input').serializeArray();
+                var dataContainer = commentContainer.find(settings.hiddenFieldsSelector);
+                return $(dataContainer).find(':input').serializeArray();
             },
             handlePostError: function(settings, response) {
-            	// override as needed for better error handling
-            	if (response.error_message) {
-            		alert(response.error_message);
-            	}
-            	else 
-            		alert('An error occurred with your submission. Please try again.');
+                // override as needed for better error handling
+                if (response.error_message) {
+                    alert(response.error_message);
+                }
+                else 
+                    alert('An error occurred with your submission. Please try again.');
             },
             post_data: function(url, data, callback) {
                 $.ajax({
@@ -135,7 +135,7 @@
                     var commentForm = $(this).closest(settings.commentFormSelector);
 
                     // Copy the message content over to the hidden field
-                    var message_holder = commentForm.find('[name=message_holder]')
+                    var message_holder = commentForm.find('[name=message_holder]');
                     commentForm.find('input[name=message]').val(message_holder.val());
                     message_holder.val('');
 
@@ -149,18 +149,20 @@
                         }
                         settings.postCommentUpdatedFunction(settings, response);
                     });
-                	callback.fail(function(response) {
-                    	// reset comment msg back
-                    	message_holder.val(commentForm.find('input[name=message]').val());
-                    	settings.handlePostError(settings, response);
-                	});
-                    settings.post_data(settings.postUrl, settings.getData(settings, commentForm), callback);
+                    callback.fail(function(response) {
+                        // reset comment msg back
+                        message_holder.val(commentForm.find('input[name=message]').val());
+                        settings.handlePostError(settings, response);
+                    });
+                    if (commentForm.find('input[name=message]')[0].value !== "") {
+                        settings.post_data(settings.postUrl, settings.getData(settings, commentForm), callback);
+                    }
                     break;
                 case 'post-edit':
                     var commentForm = $(this).closest(settings.commentFormSelector);
 
                     // Copy the message content over to the hidden field
-                    var message_holder = commentForm.find('[name=message_holder]')
+                    var message_holder = commentForm.find('[name=message_holder]');
                     commentForm.find('input[name=message]').val(message_holder.val());
                     message_holder.val('');
 
@@ -170,11 +172,11 @@
                         commentContainer.empty().replaceWith(response.html_content);
                         settings.postCommentUpdatedFunction(settings, response);
                     });
-                	callback.fail(function(response) {
-                    	// reset comment msg back
-                    	message_holder.val(commentForm.find('input[name=message]').val());
-                    	settings.handlePostError(settings, response);
-                	});
+                    callback.fail(function(response) {
+                        // reset comment msg back
+                        message_holder.val(commentForm.find('input[name=message]').val());
+                        settings.handlePostError(settings, response);
+                    });
                     settings.post_data(settings.postUrl, settings.getData(settings, commentForm), callback);
                     break;
                 case 'reply':
