@@ -154,7 +154,7 @@
                         message_holder.val(commentForm.find('input[name=message]').val());
                         settings.handlePostError(settings, response);
                     });
-                    settings.post_data(settings.postUrl, commentData, callback);
+                    settings.post_data(settings.postUrl, settings.getData(settings, commentForm), callback);
                     break;
                 case 'post-edit':
                     var commentForm = $(this).closest(settings.commentFormSelector);
