@@ -154,8 +154,10 @@
                         message_holder.val(commentForm.find('input[name=message]').val());
                         settings.handlePostError(settings, response);
                     });
-                    if (commentForm.find('input[name=message]')[0].value !== "") {
-                        settings.post_data(settings.postUrl, settings.getData(settings, commentForm), callback);
+					var commentData = settings.getData(settings, commentForm);
+					var comment = commentData[1].value;
+                    if (comment !== "" || $('.upload-item').length !== 0) {
+                        settings.post_data(settings.postUrl, commentData, callback);
                     }
                     break;
                 case 'post-edit':
