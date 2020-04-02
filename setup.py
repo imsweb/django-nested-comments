@@ -12,7 +12,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'django-mptt',
+        'django-mptt==0.11.0',
         'bleach',
     ],
     classifiers=[
