@@ -16,7 +16,7 @@
                 {% endblock comment %}
             {% endif %}
             {% if node.level < max_depth %}
-                <div class="child-comments{% if not node.is_root_node %} left-comment-indent{% endif %}">
+                <div id='{{ node.id }}-children' class="child-comments{% if not node.is_root_node %} left-comment-indent{% endif %}">
                     {{ children }}
                     {# After the last child on each level we add the form to allow submission of a new comment at the children's level #}
                     {# Note: the root node is NOT a real comment, but the first level of visible comments are still it's children #}
