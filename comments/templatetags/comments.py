@@ -66,3 +66,7 @@ def get_latest_version(context):
     if context['node'].versions.count():
         return context['node'].versions.all()[0]
     return None
+
+@register.simple_tag(takes_context=True)
+def get_child_count(context):
+    return context['node'].get_children().filter(deleted=False).count()
