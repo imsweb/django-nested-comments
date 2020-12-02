@@ -246,6 +246,12 @@ def delete_comment(request):
     try:
         # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
         kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
+        kwargs.update(
+            {
+                'node': comment,
+                'parent_object': parent_object,
+            }
+        )
         comment_changed.send(sender=comment.__class__, comment=comment, request=request, version_saved=None, comment_action='pre_delete', kwargs=kwargs)
 
         comment.deleted = True
