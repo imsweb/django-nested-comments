@@ -240,7 +240,7 @@ def delete_comment(request):
         transaction.set_rollback(True)
         return JsonResponse({
             'ok': False,
-            'error_message': "You do not have permission to post this comment.",
+            'error_message': "You do not have permission to delete this comment.",
         })
 
     try:
