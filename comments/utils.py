@@ -6,11 +6,10 @@ from .models import Comment, CommentVersion
 from functools import wraps
 
 import logging
-
-logger = logging.getLogger(__name__)
-
 import json
 
+
+logger = logging.getLogger(__name__)
 
 class FailSafelyException(Exception):
     """Throw when the exception should be communicated to the end user"""
