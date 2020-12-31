@@ -123,7 +123,7 @@
                             $(nodeContainer).find(settings.rootContainerSelector).empty().append(response.html_content);
                             settings.postCommentLoadFunction(settings, response, nodeContainer);
                         } else {
-                            settings.handleLoadError(settings.response);
+                            settings.handleLoadError(settings, response);
                         }
                         
                     }
