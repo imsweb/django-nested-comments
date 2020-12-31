@@ -29,6 +29,13 @@ class InvalidCommentException(FailSafelyException):
 
 
 def ajax_only(view):
+    """Handle error messages passing and atomicity for AJAX requests
+
+    There is a subset of errors produced by the system that should be
+    communicated back to the end user. These errors (subclasses of
+    `FailSafelyException`) are logged, and prevent any changes from being
+    committed to the database.
+    """
     @wraps(view)
     def wrapped(request, *args, **kwargs):
         if not request.is_ajax():
