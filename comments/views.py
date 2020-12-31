@@ -8,6 +8,7 @@ from django.shortcuts import render
 from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
+from django.db import DatabaseError
 
 from .forms import CommentVersionForm
 from .models import Comment, CommentVersion
@@ -222,7 +223,7 @@ def delete_comment(request):
             'ok': True,
         })
     except Exception as e:
-        raise FailSafelyException('There was an error deleting the selected comment(s).')
+        raise FailSafelyException('There was an error deleting the selected comment(s).') from e
 
 
 @ajax_only

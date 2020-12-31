@@ -15,9 +15,8 @@ import json
 class FailSafelyException(Exception):
     """Throw when the exception should be communicated to the end user"""
     def __init__(self, message="Something went wrong. Please try again later."):
-
-        self.message = message
         super().__init__()
+        self.message = message
 
     def __str__(self):
         return self.message
