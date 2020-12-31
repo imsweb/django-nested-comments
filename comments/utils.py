@@ -1,15 +1,50 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import models
+from django.http import Http404, JsonResponse
+from django.db import models, transaction
 from .models import Comment, CommentVersion
+from functools import wraps
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 import json
 
-class InvalidCommentException(Exception):
+
+class FailSafelyException(Exception):
+    """Throw when the exception should be communicated to the end user"""
+    def __init__(self, message="Something went wrong. Please try again later."):
+
+        self.message = message
+        super().__init__()
+
+    def __str__(self):
+        return self.message
+
+
+class InvalidCommentException(FailSafelyException):
     """
     Throw this exception when a valid comment cannot be found/created based on the parameters of a request.
     """
     pass
+
+
+def ajax_only(view):
+    @wraps(view)
+    def wrapped(request, *args, **kwargs):
+        if not request.is_ajax():
+            raise Http404
+
+        with transaction.atomic():
+            try:
+                return view(request, *args, **kwargs)
+            except FailSafelyException as e:
+                transaction.set_rollback(True)
+                logger.exception("Unable to process comment operation")
+                return JsonResponse({'ok': False, 'error_message': e.message})
+    return wrapped
+
     
 def _get_target_comment(request):
     """
