@@ -46,7 +46,7 @@ def ajax_only(view):
                 return view(request, *args, **kwargs)
             except FailSafelyException as e:
                 transaction.set_rollback(True)
-                logger.exception("Unable to process comment operation")
+                logger.exception(e.message)
                 return JsonResponse({'ok': False, 'error_message': e.message})
     return wrapped
 
