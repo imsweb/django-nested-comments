@@ -66,6 +66,9 @@
             	else 
             		alert('An error occurred with your submission. Please try again.');
             },
+            handleLoadError: function(settings, response) {
+                settings.handlePostError(settings, response);
+            },
             post_data: function(url, data, callback) {
                 $.ajax({
                     type: 'POST',
@@ -119,8 +122,10 @@
                         if (response.ok){
                             $(nodeContainer).find(settings.rootContainerSelector).empty().append(response.html_content);
                             settings.postCommentLoadFunction(settings, response, nodeContainer);
+                        } else {
+                            settings.handleLoadError(settings, response);
                         }
-                        // TODO: handle failure
+                        
                     }
                 });
             });

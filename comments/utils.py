@@ -1,15 +1,55 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db import models
+from django.http import Http404, JsonResponse
+from django.db import models, transaction
 from .models import Comment, CommentVersion
+from functools import wraps
 
+import logging
 import json
 
-class InvalidCommentException(Exception):
+
+logger = logging.getLogger(__name__)
+
+class FailSafelyException(Exception):
+    """Throw when the exception should be communicated to the end user"""
+    def __init__(self, message="Something went wrong. Please try again later."):
+        super().__init__()
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
+
+class InvalidCommentException(FailSafelyException):
     """
     Throw this exception when a valid comment cannot be found/created based on the parameters of a request.
     """
     pass
+
+
+def ajax_only(view):
+    """Handle error messages passing and atomicity for AJAX requests
+
+    There is a subset of errors produced by the system that should be
+    communicated back to the end user. These errors (subclasses of
+    `FailSafelyException`) are logged, and prevent any changes from being
+    committed to the database.
+    """
+    @wraps(view)
+    def wrapped(request, *args, **kwargs):
+        if not request.is_ajax():
+            raise Http404
+
+        with transaction.atomic():
+            try:
+                return view(request, *args, **kwargs)
+            except FailSafelyException as e:
+                transaction.set_rollback(True)
+                logger.exception(e.message)
+                return JsonResponse({'ok': False, 'error_message': e.message})
+    return wrapped
+
     
 def _get_target_comment(request):
     """
