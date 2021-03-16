@@ -18,7 +18,7 @@
         }
         var csrftoken = getCookie('csrftoken');
         if (csrftoken == null) {
-            csrftoken = BIOSHARE.http.csrfToken();
+            csrftoken = $("[name=csrfmiddlewaretoken]").val();
         }
 
         // These are mirrored in the 'initialize_comments' template tag. Any change here should be reflected there.
