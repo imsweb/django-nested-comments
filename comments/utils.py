@@ -113,13 +113,13 @@ def _process_node_permissions(**kwargs):
     """
     This function checks and associates the three permissions (reply, edit, delete) to each comment node. This allows permission based access on a per comment basis.
     """
-    request = kwargs.get('request', None)
-    parent_object = kwargs.get('parent_object', None)
-    max_depth = kwargs.get('max_depth', None)
+    request = kwargs.pop('request', None)
+    parent_object = kwargs.pop('parent_object', None)
+    max_depth = kwargs.pop('max_depth', None)
     for comment in kwargs.get('nodes', []):
-        comment.can_reply = user_has_permission(request, parent_object, 'can_reply_to_comment', comment=comment) and (comment.level < max_depth)
-        comment.can_edit = user_has_permission(request, parent_object, 'can_post_comment', comment=comment)
-        comment.can_delete = user_has_permission(request, parent_object, 'can_delete_comment', comment=comment)
+        comment.can_reply = user_has_permission(request, parent_object, 'can_reply_to_comment', comment=comment, **kwargs) and (comment.level < max_depth)
+        comment.can_edit = user_has_permission(request, parent_object, 'can_post_comment', comment=comment, **kwargs)
+        comment.can_delete = user_has_permission(request, parent_object, 'can_delete_comment', comment=comment, **kwargs)
 
 
 def get_attr_val(request, obj, attr, default=None, **kwargs):
