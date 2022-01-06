@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
@@ -42,7 +41,7 @@ class Comment (MPTTModel):
     object_id = models.PositiveIntegerField(blank=True, null=True)
     content_object = GenericForeignKey()
     
-    data = JSONField(null=True)
+    data = models.JSONField(null=True)
     """ User-defined data, stored as JSON in a text field. """
     
     deleted = models.BooleanField(default=False)
