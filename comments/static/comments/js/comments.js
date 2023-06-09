@@ -99,6 +99,12 @@
             postCommentDeleteFunction: function(settings, nodeContainer, response) {$(nodeContainer).remove();},
             getExtraDataForPost: function(commentFormContainer){return '';},
             commentPostFailExtraCallbacks: function(settings) {return [];},
+            copyTextareaData: function(settings, commentForm) {
+                // Copy the message content over to the hidden field
+                var message_holder = commentForm.find('[name=message_holder]')
+                commentForm.find('input[name=message]').val(message_holder.val());
+                message_holder.val('');
+            },
             rootContainerSelector: ".comments-root-container",
             
             kwargs: {},
@@ -142,10 +148,7 @@
                 case 'post-new':
                     var commentForm = $(this).closest(settings.commentFormSelector);
 
-                    // Copy the message content over to the hidden field
-                    var message_holder = commentForm.find('[name=message_holder]')
-                    commentForm.find('input[name=message]').val(message_holder.val());
-                    message_holder.val('');
+                    copyTextareaData(settings, commentForm);
 
                     var callback = $.Deferred();
                     // Insert new comment directly before the comment form
@@ -167,10 +170,7 @@
                 case 'post-edit':
                     var commentForm = $(this).closest(settings.commentFormSelector);
 
-                    // Copy the message content over to the hidden field
-                    var message_holder = commentForm.find('[name=message_holder]')
-                    commentForm.find('input[name=message]').val(message_holder.val());
-                    message_holder.val('');
+                    copyTextareaData(settings, commentForm);
 
                     var callback = $.Deferred();
                     callback.done(function(response){
