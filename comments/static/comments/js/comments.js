@@ -148,7 +148,7 @@
                 case 'post-new':
                     var commentForm = $(this).closest(settings.commentFormSelector);
 
-                    copyTextareaData(settings, commentForm);
+                    settings.copyTextareaData(settings, commentForm);
 
                     var callback = $.Deferred();
                     // Insert new comment directly before the comment form
@@ -170,7 +170,7 @@
                 case 'post-edit':
                     var commentForm = $(this).closest(settings.commentFormSelector);
 
-                    copyTextareaData(settings, commentForm);
+                    settings.copyTextareaData(settings, commentForm);
 
                     var callback = $.Deferred();
                     callback.done(function(response){
