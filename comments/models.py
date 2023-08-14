@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
@@ -74,4 +74,3 @@ def store_deleted_user(sender, **kwargs):
         for comment_version in CommentVersion.objects.filter(posting_user=instance):
             comment_version.deleted_user_info = user_info
             comment_version.save()
-        
