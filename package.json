@@ -1,0 +1,23 @@
+{
+  "name": "django-nested-comments",
+  "version": "1.10.5",
+  "description": "The frontend for the django-nested-comments Django application. It handles comment uploads and associating them to arbitrary models.",
+  "main": "comments/static/comments/js/comments.js",
+  "files": [
+    "comments/static/comments/**"
+  ],
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imsweb/django-nested-comments.git"
+  },
+  "author": "Noah Lefcourt",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/imsweb/django-nested-comments/issues"
+  },
+  "homepage": "https://github.com/imsweb/django-nested-comments#readme"
+}
