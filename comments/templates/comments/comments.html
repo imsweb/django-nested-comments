@@ -27,7 +27,7 @@
                                 <input type="hidden" name="message">
                             </div>
                             <div class="comment-visible-fields">
-                                <textarea {% block textarea_nonclass_attrs %}{% endblock textarea_nonclass_attrs %} class="{% block post_textarea_class %}{% endblock post_textarea_class %}" name="message_holder"></textarea>
+                                <textarea id="{% block textarea_id %}comment-{{ node.id }}{% endblock textarea_id %}" class="{% block post_textarea_class %}{% endblock post_textarea_class %}" name="message_holder"></textarea>
                                 {% block new-comment-buttons %}
 	                                <button type="button" class="action-trigger" data-action="post-new">{% if node.is_root_node %}Submit New Comment{% else %}Submit Response{% endif %}</button>
 	                                {% block extra_buttons %}{% endblock extra_buttons %}
