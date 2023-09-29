@@ -188,7 +188,7 @@ def post_comment(request, send_signal=True):
 
     return JsonResponse({
         'ok': True,
-        'html_content': loader.render_to_string(comment_template, context=kwargs)
+        'html_content': loader.render_to_string(comment_template, context=kwargs, request=request)
     })    
 
 
