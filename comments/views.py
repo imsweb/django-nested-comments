@@ -91,7 +91,7 @@ def create_new_version(request, comment):
 
 def get_template(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=True):
     # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
-    kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
+    kwargs = json.loads(request.headers.get('x-kwargs', {}))
 
     kwargs.update({
                    'node': comment,
@@ -210,7 +210,7 @@ def delete_comment(request):
 
     try:
         # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
-        kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
+        kwargs = json.loads(request.headers.get('x-kwargs', {}))
         comment_changed.send(sender=comment.__class__, comment=comment, request=request, version_saved=None, comment_action='pre_delete', kwargs=kwargs)
 
         comment.deleted = True
@@ -247,7 +247,7 @@ def load_comments(request):
                                                                                                         .select_related('posting_user', 'deleted_user_info')))
 
     # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
-    kwargs = json.loads(request.META.get('HTTP_X_KWARGS', {}))
+    kwargs = json.loads(request.headers.get('x-kwargs', {}))
     kwargs.update({
                    'nodes': nodes,
                    'parent_object': parent_object,
