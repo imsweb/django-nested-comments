@@ -38,7 +38,7 @@ def ajax_only(view):
     """
     @wraps(view)
     def wrapped(request, *args, **kwargs):
-        if not request.is_ajax():
+        if not request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
             raise Http404
 
         with transaction.atomic():
