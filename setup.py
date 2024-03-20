@@ -13,7 +13,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'django-mptt~=0.14.0',
-        'bleach',
+        'nh3',
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
