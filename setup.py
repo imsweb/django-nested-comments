@@ -12,7 +12,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'django-mptt~=0.15.0',
+        'django-mptt~=0.16.0',
         'nh3',
     ],
     classifiers=[
