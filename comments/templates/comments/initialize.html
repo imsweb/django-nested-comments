@@ -1,5 +1,5 @@
 {% block initialize-comments %}
-    <div class="comments-node-container comments-wrapper">
+    <div class="{% block comments-node-container-class %}comments-node-container{% endblock comments-node-container-class %} comments-wrapper">
         {% block comment-tree %}
             <div class="comment-hidden-fields">
                 <input type="hidden" name="ct_id" value="{{ ct_id }}">
