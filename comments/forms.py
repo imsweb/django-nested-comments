@@ -10,10 +10,24 @@ class CommentVersionForm(forms.ModelForm):
         model = CommentVersion
         fields = ['message']
 
-    def __init__(self, *args, **kwargs):
-        self.parent_object = kwargs.pop("parent_object", None)
-        self.user = kwargs.pop("user", None)
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        data=None,
+        files=None,
+        auto_id="id_%s",
+        prefix=None,
+        initial=None,
+        error_class=ErrorList,
+        label_suffix=None,
+        empty_permitted=False,
+        instance=None,
+        use_required_attribute=None,
+        renderer=None,
+        **kwargs,
+    ):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        super().__init__(data, files, auto_id, prefix, initial, error_class, label_suffix, empty_permitted, instance, use_required_attribute, renderer)
 
     def clean_message(self):
         message = self.cleaned_data['message']
