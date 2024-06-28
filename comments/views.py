@@ -1,3 +1,4 @@
+from django.apps import apps
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
@@ -10,7 +11,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 from django.db import DatabaseError
 
-from .forms import CommentVersionForm
 from .models import Comment, CommentVersion
 from .signals import comment_changed
 from .utils import InvalidCommentException, FailSafelyException, ajax_only, _get_target_comment, _get_or_create_tree_root, _process_node_permissions, user_has_permission, get_attr_val
@@ -43,8 +43,12 @@ def create_new_version_without_request(comment, message, user):
     """
     return new_version(comment, user, {'message':message, 'comment':comment, 'posting_user':user})
 
-def new_version(comment, user, form_data_to_bind):
-    version_form = CommentVersionForm(form_data_to_bind)
+def new_version(comment, user, form_data_to_bind, **kwargs):
+    kwargs["user"] = user
+    version_form = apps.get_app_config("comments").get_comment_version_form()(
+        form_data_to_bind,
+        **kwargs,
+    )
     new_version = None
     if version_form.is_valid():
         new_version = version_form.save(commit=False)
@@ -86,8 +90,8 @@ def lock_comment(comment, nowait=True):
 def not_most_recent_version(comment, previous_version):
     return previous_version and previous_version != comment.versions.latest()
 
-def create_new_version(request, comment):
-    return new_version(comment, request.user, request.POST)
+def create_new_version(request, comment, **kwargs):
+    return new_version(comment, request.user, request.POST, **kwargs)
 
 def get_template(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=True):
     # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
@@ -115,7 +119,7 @@ def get_template(request, comment, parent_object, tree_root, new_version, previo
 
     return comment_template, kwargs
 
-def post_comment_form(request):
+def post_comment_form(request, **kwargs):
     """
     View function that handles inserting new comments via POST data (form submission)
     """
@@ -138,14 +142,15 @@ def post_comment_form(request):
        comment = add_comment(comment)
 
     # Everything has checked out, so we save the new version and return the appropriate response
-    version_form, new_version = create_new_version(request, comment)
+    kwargs["parent_object"] = parent_object
+    version_form, new_version = create_new_version(request, comment, **kwargs)
 
     return comment
 
 @transaction.atomic
 @require_POST
 @ajax_only
-def post_comment(request, send_signal=True):
+def post_comment(request, send_signal=True, **kwargs):
     """
     View function that handles inserting new/editing previously existing comments via Ajax
     """
@@ -180,10 +185,21 @@ def post_comment(request, send_signal=True):
         raise FailSafelyException("You are not editing the most recent version of this comment. Please refresh your page and try again.")
 
     # Everything has checked out, so we save the new version and return the appropriate response
-    version_form, new_version = create_new_version(request, comment)
+    kwargs["parent_object"] = parent_object
+    version_form, new_version = create_new_version(request, comment, **kwargs)
     if not version_form.is_valid():
-        raise FailSafelyException("There were errors in your submission. Please correct them and resubmit.")
-    
+        if apps.get_app_config("comments").RAISE_EXCEPTION_ON_VERSION_FAIL:
+            raise FailSafelyException("There were errors in your submission. Please correct them and resubmit.")
+        else:
+            response = {
+                "ok": False,
+            }
+            errors = version_form.errors
+            message_errors = errors.get("message") if errors else None
+            if message_errors:
+                response["error_message"] = '\n'.join(message_errors)
+            return JsonResponse(response)
+
     comment_template, kwargs = get_template(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=send_signal)
 
     return JsonResponse({

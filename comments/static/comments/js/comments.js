@@ -36,7 +36,7 @@
                 var confirmationMessage = 'Are you sure you want to delete this comment?';
                 var hasChildren = nodeContainer.children(settings.childCommentsSelector).children(settings.nodeContainerSelector).length > 0;
                 if (hasChildren) {
-                    confirmationMessage += " NOTE: Deleting this comment will remove ALL RESPONSES to this comment as well."
+                    confirmationMessage += " NOTE: Deleting this comment will remove ALL RESPONSES to this comment as well.";
                 }
                 if(confirm(confirmationMessage)){
                     var callback = $.Deferred();
@@ -44,7 +44,7 @@
                         settings.postCommentDeleteFunction(settings, nodeContainer, response);
                         settings.postCommentUpdatedFunction(settings, response);
                     }).fail(function(response){
-                    	settings.handlePostError(settings, response);
+                        settings.handlePostError(settings, response);
                     });
                     settings.post_data(settings.deleteUrl, settings.getData(settings, commentContainer), callback);
                 }
@@ -58,16 +58,16 @@
                 commentContainer.find(settings.messageEditContainerSelector).first().toggle();
             },
             getData: function(settings, commentContainer) {
-            	var dataContainer = commentContainer.find(settings.hiddenFieldsSelector);
-            	return $(dataContainer).find(':input').serializeArray();
+                var dataContainer = commentContainer.find(settings.hiddenFieldsSelector);
+                return $(dataContainer).find(':input').serializeArray();
             },
             handlePostError: function(settings, response) {
-            	// override as needed for better error handling
-            	if (response.error_message) {
-            		alert(response.error_message);
-            	}
-            	else 
-            		alert('An error occurred with your submission. Please try again.');
+                // override as needed for better error handling
+                if (response.error_message) {
+                    alert(response.error_message);
+                } else {
+                    alert('An error occurred with your submission. Please try again.');
+                }
             },
             handleLoadError: function(settings, response) {
                 settings.handlePostError(settings, response);
@@ -101,14 +101,14 @@
             commentPostFailExtraCallbacks: function(settings) {return [];},
             copyTextareaData: function(settings, commentForm) {
                 // Copy the message content over to the hidden field
-                var message_holder = commentForm.find('[name=message_holder]')
+                var message_holder = commentForm.find('[name=message_holder]');
                 commentForm.find('input[name=message]').val(message_holder.val());
                 message_holder.val('');
             },
             rootContainerSelector: ".comments-root-container",
-            
+
             kwargs: {},
-            
+
             getUrl: null,
             postUrl: null,
             deleteUrl: null,
@@ -117,6 +117,65 @@
         var load_comments = function() {
             $(settings.nodeContainerSelector).each(function(){
                 var nodeContainer = this;
+                // Group all "click handlers" here
+                $(settings.nodeContainerSelector).on('click', settings.actionTriggerSelector, function() {
+                    var nodeContainer = $(this).closest(settings.nodeContainerSelector);
+                    var commentContainer = nodeContainer.children(settings.commentContainerSelector).first();
+                    switch($(this).data('action')) {
+                        case 'post-new':
+                            var commentForm = $(this).closest(settings.commentFormSelector);
+
+                            settings.copyTextareaData(settings, commentForm);
+
+                            var callback = $.Deferred();
+                            // Insert new comment directly before the comment form
+                            callback.done(function(response){
+                                $(commentForm).before(response.html_content);
+                                // Only hide the commentForm if the form is for a non-root (because there is no toggle button for the root Comment Form)
+                                if ($(commentForm).hasClass('non-root')) {
+                                    $(commentForm).toggle();
+                                }
+                                settings.postCommentUpdatedFunction(settings, response);
+                            });
+                            callback.fail(function(response) {
+                                // reset comment msg back
+                                var message_holder = commentForm.find('[name=message_holder]');
+                                message_holder.val(commentForm.find('input[name=message]').val());
+                                settings.handlePostError(settings, response);
+                            });
+                            settings.post_data(settings.postUrl, settings.getData(settings, commentForm), callback);
+                            break;
+                        case 'post-edit':
+                            var commentForm = $(this).closest(settings.commentFormSelector);
+
+                            settings.copyTextareaData(settings, commentForm);
+
+                            var callback = $.Deferred();
+                            callback.done(function(response){
+                                // Replace the comment being edited with the new version
+                                commentContainer.empty().replaceWith(response.html_content);
+                                settings.postCommentUpdatedFunction(settings, response);
+                            });
+                            callback.fail(function(response) {
+                                // reset comment msg back
+                                var message_holder = commentForm.find('[name=message_holder]');
+                                message_holder.val(commentForm.find('input[name=message]').val());
+                                settings.handlePostError(settings, response);
+                            });
+                            settings.post_data(settings.postUrl, settings.getData(settings, commentForm), callback);
+                            break;
+                        case 'reply':
+                            settings.replyCommentFunction(settings, nodeContainer, commentContainer);
+                            break;
+                        case 'edit':
+                            settings.editCommentFunction(settings, nodeContainer, commentContainer);
+                            break;
+                        case 'delete':
+                            settings.deleteCommentFunction(settings, nodeContainer, commentContainer);
+                            break;
+                    }
+                    return false;
+                });
                 // TODO: Check for load_initial and skip if 0 (save us a hit on the server)
                 $.ajax({
                     url: settings.getUrl,
@@ -134,71 +193,13 @@
                         } else {
                             settings.handleLoadError(settings, response);
                         }
-                        
+
                     }
                 });
             });
         };
-        
-        // Group all "click handlers" here
-        $('body').on('click', settings.actionTriggerSelector, function() {
-            var nodeContainer = $(this).closest(settings.nodeContainerSelector);
-            var commentContainer = nodeContainer.children(settings.commentContainerSelector).first();
-            switch($(this).data('action')) {
-                case 'post-new':
-                    var commentForm = $(this).closest(settings.commentFormSelector);
 
-                    settings.copyTextareaData(settings, commentForm);
-
-                    var callback = $.Deferred();
-                    // Insert new comment directly before the comment form
-                    callback.done(function(response){
-                        $(commentForm).before(response.html_content);
-                        // Only hide the commentForm if the form is for a non-root (because there is no toggle button for the root Comment Form)
-                        if ($(commentForm).hasClass('non-root')) {
-                            $(commentForm).toggle();
-                        }
-                        settings.postCommentUpdatedFunction(settings, response);
-                    });
-                	callback.fail(function(response) {
-                    	// reset comment msg back
-                    	message_holder.val(commentForm.find('input[name=message]').val());
-                    	settings.handlePostError(settings, response);
-                	});
-                    settings.post_data(settings.postUrl, settings.getData(settings, commentForm), callback);
-                    break;
-                case 'post-edit':
-                    var commentForm = $(this).closest(settings.commentFormSelector);
-
-                    settings.copyTextareaData(settings, commentForm);
-
-                    var callback = $.Deferred();
-                    callback.done(function(response){
-                        // Replace the comment being edited with the new version
-                        commentContainer.empty().replaceWith(response.html_content);
-                        settings.postCommentUpdatedFunction(settings, response);
-                    });
-                	callback.fail(function(response) {
-                    	// reset comment msg back
-                    	message_holder.val(commentForm.find('input[name=message]').val());
-                    	settings.handlePostError(settings, response);
-                	});
-                    settings.post_data(settings.postUrl, settings.getData(settings, commentForm), callback);
-                    break;
-                case 'reply':
-                    settings.replyCommentFunction(settings, nodeContainer, commentContainer);
-                    break;
-                case 'edit':
-                    settings.editCommentFunction(settings, nodeContainer, commentContainer);
-                    break;
-                case 'delete':
-                    settings.deleteCommentFunction(settings, nodeContainer, commentContainer);
-                    break;
-            }
-            return false;
-        });
-        
         load_comments();
-        
+
     };
 }(jQuery));
