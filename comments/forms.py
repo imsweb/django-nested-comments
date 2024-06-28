@@ -9,7 +9,10 @@ class CommentVersionForm(forms.ModelForm):
     class Meta:
         model = CommentVersion
         fields = ['message']
-        
+
+    def __init__(self, *args, extra=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
     def clean_message(self):
         message = self.cleaned_data['message']
         allowed_tags = settings.ALLOWED_TAGS if hasattr(settings, 'ALLOWED_TAGS') else nh3.ALLOWED_TAGS

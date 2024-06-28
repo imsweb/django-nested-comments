@@ -139,6 +139,7 @@
                             });
                             callback.fail(function(response) {
                                 // reset comment msg back
+                                var message_holder = commentForm.find('[name=message_holder]');
                                 message_holder.val(commentForm.find('input[name=message]').val());
                                 settings.handlePostError(settings, response);
                             });
@@ -157,6 +158,7 @@
                             });
                             callback.fail(function(response) {
                                 // reset comment msg back
+                                var message_holder = commentForm.find('[name=message_holder]');
                                 message_holder.val(commentForm.find('input[name=message]').val());
                                 settings.handlePostError(settings, response);
                             });
