@@ -185,7 +185,6 @@ def post_comment(request, send_signal=True, **kwargs):
         raise FailSafelyException("You are not editing the most recent version of this comment. Please refresh your page and try again.")
 
     # Everything has checked out, so we save the new version and return the appropriate response
-    kwargs = {**(kwargs or {})}
     kwargs["parent_object"] = parent_object
     version_form, new_version = create_new_version(request, comment, **kwargs)
     if not version_form.is_valid():
