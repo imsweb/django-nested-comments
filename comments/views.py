@@ -43,12 +43,11 @@ def create_new_version_without_request(comment, message, user):
     """
     return new_version(comment, user, {'message':message, 'comment':comment, 'posting_user':user})
 
-def new_version(comment, user, form_data_to_bind, extra=None):
-    extra = {**(extra or {})}
-    extra["user"] = user
+def new_version(comment, user, form_data_to_bind, **kwargs):
+    kwargs["user"] = user
     version_form = apps.get_app_config("comments").get_comment_version_form()(
         form_data_to_bind,
-        extra=extra,
+        **kwargs,
     )
     new_version = None
     if version_form.is_valid():
@@ -91,8 +90,8 @@ def lock_comment(comment, nowait=True):
 def not_most_recent_version(comment, previous_version):
     return previous_version and previous_version != comment.versions.latest()
 
-def create_new_version(request, comment, extra=None):
-    return new_version(comment, request.user, request.POST, extra=extra)
+def create_new_version(request, comment, **kwargs):
+    return new_version(comment, request.user, request.POST, **kwargs)
 
 def get_template(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=True):
     # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
@@ -120,7 +119,7 @@ def get_template(request, comment, parent_object, tree_root, new_version, previo
 
     return comment_template, kwargs
 
-def post_comment_form(request, extra=None):
+def post_comment_form(request, **kwargs):
     """
     View function that handles inserting new comments via POST data (form submission)
     """
@@ -143,16 +142,15 @@ def post_comment_form(request, extra=None):
        comment = add_comment(comment)
 
     # Everything has checked out, so we save the new version and return the appropriate response
-    extra = {**(extra or {})}
-    extra["parent_object"] = parent_object
-    version_form, new_version = create_new_version(request, comment, extra=extra)
+    kwargs["parent_object"] = parent_object
+    version_form, new_version = create_new_version(request, comment, **kwargs)
 
     return comment
 
 @transaction.atomic
 @require_POST
 @ajax_only
-def post_comment(request, send_signal=True, extra=None):
+def post_comment(request, send_signal=True, **kwargs):
     """
     View function that handles inserting new/editing previously existing comments via Ajax
     """
@@ -187,11 +185,11 @@ def post_comment(request, send_signal=True, extra=None):
         raise FailSafelyException("You are not editing the most recent version of this comment. Please refresh your page and try again.")
 
     # Everything has checked out, so we save the new version and return the appropriate response
-    extra = {**(extra or {})}
-    extra["parent_object"] = parent_object
-    version_form, new_version = create_new_version(request, comment, extra=extra)
+    kwargs = {**(kwargs or {})}
+    kwargs["parent_object"] = parent_object
+    version_form, new_version = create_new_version(request, comment, **kwargs)
     if not version_form.is_valid():
-        if apps.get_app_config("comments").RAISE_FAIL_SAFELY_EXCEPTION_ON_NEW_VERSION_FORM_FAILING:
+        if apps.get_app_config("comments").RAISE_EXCEPTION_ON_VERSION_FAIL:
             raise FailSafelyException("There were errors in your submission. Please correct them and resubmit.")
         else:
             response = {
