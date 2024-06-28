@@ -1,5 +1,6 @@
 from django import forms
 from django.conf import settings
+from django.forms.utils import ErrorList
 
 from .models import CommentVersion
 
