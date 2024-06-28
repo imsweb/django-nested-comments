@@ -11,11 +11,9 @@ class CommentVersionForm(forms.ModelForm):
         fields = ['message']
 
     def __init__(self, *args, **kwargs):
-        # Having this method accept kwargs but not passing kwargs into the super() call
-        # is necessary because a child class may want to use kwargs in its __init__,
-        # but if we pass into kwargs into super() here, a BaseModelForm.__init__()
-        # got an unexpected keyword argument will happen.
-        super().__init__(*args)
+        self.parent_object = kwargs.pop("parent_object", None)
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
 
     def clean_message(self):
         message = self.cleaned_data['message']
