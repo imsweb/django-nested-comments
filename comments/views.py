@@ -33,15 +33,15 @@ def create_comment_without_request(obj, user, message):
         comment = add_comment(comment)
 
     # Create a new/original version of the comment.
-    create_new_version_without_request(comment, message, user)
+    create_new_version_without_request(comment, message, user, parent_object=obj)
 
     return comment
 
-def create_new_version_without_request(comment, message, user):
+def create_new_version_without_request(comment, message, user, **kwargs):
     """
     Calls new_version with the parameters to create a version without a request object. 
     """
-    return new_version(comment, user, {'message':message, 'comment':comment, 'posting_user':user})
+    return new_version(comment, user, {'message': message, 'comment': comment, 'posting_user': user}, **kwargs)
 
 def new_version(comment, user, form_data_to_bind, **kwargs):
     kwargs["user"] = user
