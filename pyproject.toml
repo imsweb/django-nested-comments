@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "django-nested-comments"
+dynamic = ["version"]
+description = "A Django application for handling comment uploads and associating them to arbitrary models."
+readme = "README.md"
+license = "BSD-2-Clause"
+authors = [
+    { name = "Noah Lefcourt", email = "lefcourn@imsweb.com" },
+]
+maintainers = [
+  { name = "Brad Rutten", email = "ruttenb@imsweb.com" },
+  { name = "Jacob Tomlinson", email = "tomlinsonj@imsweb.com" },
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 2",
+    "Programming Language :: Python :: 3.2",
+    "Programming Language :: Python :: 3.3",
+    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "django-mptt~=0.16.0",
+    "nh3",
+]
+
+[project.urls]
+Homepage = "https://github.com/imsweb/django-nested-comments"
+
+[tool.hatch.version]
+path = "comments/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/comments",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["comments"]
