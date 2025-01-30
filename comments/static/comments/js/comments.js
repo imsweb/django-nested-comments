@@ -118,7 +118,7 @@
             $(settings.nodeContainerSelector).each(function(){
                 var nodeContainer = this;
                 // Group all "click handlers" here
-                $(settings.nodeContainerSelector).on('click', settings.actionTriggerSelector, function() {
+                $(this).on('click', settings.actionTriggerSelector, function() {
                     var nodeContainer = $(this).closest(settings.nodeContainerSelector);
                     var commentContainer = nodeContainer.children(settings.commentContainerSelector).first();
                     switch($(this).data('action')) {
