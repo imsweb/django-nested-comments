@@ -93,7 +93,7 @@ def not_most_recent_version(comment, previous_version):
 def create_new_version(request, comment, **kwargs):
     return new_version(comment, request.user, request.POST, **kwargs)
 
-def get_template(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=True):
+def process_comment(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=True):
     # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
     kwargs = json.loads(request.headers.get('x-kwargs', {}))
 
@@ -200,7 +200,7 @@ def post_comment(request, send_signal=True, **kwargs):
                 response["error_message"] = '\n'.join(message_errors)
             return JsonResponse(response)
 
-    comment_template, kwargs = get_template(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=send_signal)
+    comment_template, kwargs = process_comment(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=send_signal)
 
     return JsonResponse({
         'ok': True,
