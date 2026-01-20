@@ -1,3 +1,4 @@
+import warnings
 from django.apps import apps
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -118,6 +119,13 @@ def process_comment(request, comment, parent_object, tree_root, new_version, pre
     _process_node_permissions(**kwargs)
 
     return comment_template, kwargs
+
+def get_template(*args, **kwargs):
+    warnings.warn(
+        'This function will be deprecated in 2.1. Use ``process_comment`` instead.',
+        DeprecationWarning
+    )
+    return process_comment(*args, **kwargs)
 
 def post_comment_form(request, **kwargs):
     """
