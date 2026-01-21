@@ -122,7 +122,7 @@ def process_comment(request, comment, parent_object, tree_root, new_version, pre
 
 def get_template(*args, **kwargs):
     warnings.warn(
-        'This function will be deprecated in 2.1. Use ``process_comment`` instead.',
+        'This function will be deprecated in 3.0. Use ``process_comment`` instead.',
         DeprecationWarning
     )
     return process_comment(*args, **kwargs)
