@@ -1,3 +1,4 @@
+import warnings
 from django.apps import apps
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -93,7 +94,7 @@ def not_most_recent_version(comment, previous_version):
 def create_new_version(request, comment, **kwargs):
     return new_version(comment, request.user, request.POST, **kwargs)
 
-def get_template(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=True):
+def process_comment(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=True):
     # The 'X_KWARGS' header is populated by settings.kwarg in comments.js
     kwargs = json.loads(request.headers.get('x-kwargs', {}))
 
@@ -118,6 +119,13 @@ def get_template(request, comment, parent_object, tree_root, new_version, previo
     _process_node_permissions(**kwargs)
 
     return comment_template, kwargs
+
+def get_template(*args, **kwargs):
+    warnings.warn(
+        'This function will be deprecated in 3.0. Use ``process_comment`` instead.',
+        DeprecationWarning
+    )
+    return process_comment(*args, **kwargs)
 
 def post_comment_form(request, **kwargs):
     """
@@ -200,7 +208,7 @@ def post_comment(request, send_signal=True, **kwargs):
                 response["error_message"] = '\n'.join(message_errors)
             return JsonResponse(response)
 
-    comment_template, kwargs = get_template(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=send_signal)
+    comment_template, kwargs = process_comment(request, comment, parent_object, tree_root, new_version, previous_version, send_signal=send_signal)
 
     return JsonResponse({
         'ok': True,
